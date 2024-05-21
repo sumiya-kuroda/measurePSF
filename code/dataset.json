@@ -1,0 +1,27 @@
+{
+    "name": "GDD_OPtimization",
+    "date": "20240502",
+    "data": [
+        {"gdd":10100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_173944__GDD10100_00001_00001.tif"},
+        {"gdd":10350,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174245__GDD10350_00001_00001.tif"},
+        {"gdd":10600,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174341__GDD10600_00001_00001.tif"},
+        {"gdd":10850,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174416__GDD10850_00001_00001.tif"},
+        {"gdd":11000,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174509__GDD11000_00001_00001.tif"},
+        {"gdd":11350,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174600__GDD11350_00001_00001.tif"},
+        {"gdd":11600,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174721__GDD11600_00001_00001.tif"},
+        {"gdd":11800,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174816__GDD11800_00001_00001.tif"},
+        {"gdd":9850,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_174916__GDD9850_00001_00001.tif"},
+        {"gdd":9600,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175017__GDD9600_00001_00001.tif"},
+        {"gdd":9350,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175108__GDD9350_00001_00001.tif"},
+        {"gdd":9100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175201__GDD9100_00001_00001.tif"},
+        {"gdd":8850,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175254__GDD8850_00001_00001.tif"},
+        {"gdd":8600,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175328__GDD8600_00001_00001.tif"},
+        {"gdd":8350,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175409__GDD8350_00001_00001.tif"},
+        {"gdd":8100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175458__GDD8100_00001_00001.tif"},
+        {"gdd":7100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175532__GDD7100_00001_00001.tif"},
+        {"gdd":6100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175602__GDD6100_00001_00001.tif"},
+        {"gdd":5100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175638__GDD5100_00001_00001.tif"},
+        {"gdd":3100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175741__GDD3100_00001_00001.tif"},
+        {"gdd":1100,"path":"C:/Users/Sumiya/Documents/MicroscopeData/20240502/GDD/20240502_175821__GDD1100_00001_00001.tif"}
+    ]
+}
