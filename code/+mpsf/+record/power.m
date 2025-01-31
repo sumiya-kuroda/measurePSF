@@ -34,7 +34,7 @@ function power(varargin)
     % Powermeter.gui % don't  need this
 
 % control the laser power in percentage
-    API.hSI.hBeams.powers=0; % set laser power to zero
+    API.controlLaserPower = 0; % set laser power to zero
 
 % Tell SI to point
 

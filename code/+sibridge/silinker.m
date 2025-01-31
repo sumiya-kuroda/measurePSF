@@ -208,6 +208,10 @@ classdef silinker < handle
         end % turnOffPMTs
 
 
+        function controlLaserPower(obj)
+           obj.hSI.hBeams.powers = percentPower; 
+        end
+
     end % Close methods
 
 
