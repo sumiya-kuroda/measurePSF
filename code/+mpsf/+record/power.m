@@ -28,25 +28,33 @@ function power(varargin)
 
     API.turnOffPMTs() % is this how to do this? How does it know how many PMTs there are?
 
-% Connect to Powermeter
-
-    Powermeter = mic.powermeter.PM100D;
-    % Powermeter.gui % don't  need this
+% Connect to Powermeter, set wavelength, zero
+    powermeter = mic.powermeter.PM100D;
+    powermeter.Ask = 'power'; % must define this for powermeter.measure to work
+    powermeter.Lambda = laser_wavelength; % sets the wavelength
+    powermeter.setWavelength % sends new wavelength to powermeter
+    
 
 % control the laser power in percentage
-    API.controlLaserPower = 0; % set laser power to zero
+    API.controlLaserPower = 1; % set laser power to 1%
 
 % Tell SI to point
 
+
 % measure power
-    Power = Powermeter.measure;
+    Power = zeros(1,20);
+    Power(1) = powermeter.measure;
 
 % save power, the percent power on SI, and what SI thinks it should be
 
 % then put it  in a loop!
+    for percent = 1:length(Power)-1 % should loop 19 times, first datapoint collected already 
+        API.controlLaserPower = percent*5; % increase laser power in 5% increments
+        pause(3); % pause for 3 seconds
+        Power(percent+1) =  Powermeter.measure;
+    end
 
-
-
+  % Saving process
   % Set file name and save dir
     SETTINGS=mpsf.settings.readSettings;
     fileStem = sprintf('%s_power_%dnm_%dmW_%s__%s', ...
@@ -64,3 +72,7 @@ function power(varargin)
 
     % Report where the file was saved
     mpsf.tools.reportFileSaveLocation(saveDir,fileStem)
+
+     % Save system settings to this location
+    settingsFilePath = mpsf.settings.findSettingsFile;
+    copyfile(settingsFilePath, saveDir)
