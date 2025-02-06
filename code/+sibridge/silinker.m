@@ -209,7 +209,7 @@ classdef silinker < handle
 
 
         function controlLaserPower(obj)
-           obj.hSI.hBeams.powers = percentPower; 
+           obj.hSI.hBeams.powerFractions = percentPower; 
         end
 
     end % Close methods
