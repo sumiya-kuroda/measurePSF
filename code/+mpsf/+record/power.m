@@ -30,9 +30,7 @@ function power(varargin)
 
 % Connect to Powermeter, set wavelength, zero
     powermeter = mic.powermeter.PM100D;
-    powermeter.Ask = 'power'; % must define this for powermeter.measure to work
-    powermeter.Lambda = laser_wavelength; % sets the wavelength
-    powermeter.setWavelength % sends new wavelength to powermeter
+    powermeter.setWavelength(laser_wavelength) % sends new wavelength to powermeter
     
 
 % control the laser power in percentage
@@ -43,7 +41,7 @@ function power(varargin)
 
 % measure power
     Power = zeros(1,20);
-    Power(1) = powermeter.measure;
+    Power(1) = powermeter.getPower;
 
 % save power, the percent power on SI, and what SI thinks it should be
 
@@ -51,7 +49,7 @@ function power(varargin)
     for percent = 1:length(Power)-1 % should loop 19 times, first datapoint collected already 
         API.controlLaserPower = percent*5; % increase laser power in 5% increments
         pause(3); % pause for 3 seconds
-        Power(percent+1) =  Powermeter.measure;
+        Power(percent+1) =  Powermeter.getPower;
     end
 
   % Saving process
