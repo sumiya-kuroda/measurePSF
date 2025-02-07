@@ -37,14 +37,16 @@ powermeter = mpsf.interfaces.ThorPower; % IS THIS HOW TO CALL THE POWERMETER CLA
 powermeter.setWavelength(laser_wavelength) % sends new wavelength to powermeter
 
 % Tell SI to point
-hSI.scanPointBeam % CAN I DO THIS OR DOES IT NEED TO BE IN silinker?
+API.pointBeam % turns on point in scanimage
 
 % control the laser power in percentage
-API.controlLaserPower = 1; % set laser power to 1%
+API.controlLaserPower = .01; % set laser power to 1%
 
 
 %% Measure power
 Power = zeros(10,20);
+SIpower = zeros(1,20);
+SIpower(1,1) = API.powerPercent2Watt;
 for measurements = 1:size(Power,1) % measuring first data point
     Power(measurements,1) = powermeter.getPower; % takes 10 measurements at each percentage, pausing for 0.25s between each
     pause(0.25)
@@ -58,7 +60,7 @@ for percent = 1:size(Power,2)-1 % should loop 19 times, first datapoint collecte
         Power(measurements,percent+1) = powermeter.getPower;
         pause(0.25)
     end
-    SIpower(percent+1) = % use BeamModulator.m - convertPowerFraction2PowerWatt  % the power scanimage thinks it is at each percentage laser power
+    SIpower(1,percent+1) = API.powerPercent2Watt;%this is in BeamControls % the power scanimage thinks it is at each percentage laser power
 end
 
 % Turn off point

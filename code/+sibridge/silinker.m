@@ -207,9 +207,16 @@ classdef silinker < handle
             end
         end % turnOffPMTs
 
+        function pointBeam(obj)
+            obj.hSI.scanPointBeam
+        end
 
         function controlLaserPower(obj)
            obj.hSI.hBeams.powerFractions = percentPower; 
+        end
+
+        function powerPercent2Watt(obj)
+            obj.hBeams.hBeams{1}.convertPowerFraction2PowerWatt(obj.controlLaserPower)
         end
 
     end % Close methods
