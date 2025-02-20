@@ -13,8 +13,8 @@ function powerMeasurements = power(varargin)
 
 out =  parseInputVariable(varargin{:});
 laser_wavelength=out.wavelength;
-percentIncrease = 5;
-stepSize = round(100/percentIncrease);
+percentIncrease = 0.05;
+stepSize = round(1/percentIncrease);
 
 % Connect to ScanImage using the linker class
 API = sibridge.silinker;
@@ -51,17 +51,18 @@ observedPower = zeros(10,stepSize);
 SIpower = zeros(1,stepSize);
 
 % then put it  in a loop!
-powerSeries = 0:percentIncrease:100;
-for ii = 1:length(powerSeries) % should loop 19 times, first datapoint collected already
+powerSeries = 0:percentIncrease:1;
+for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collected already
     API.setLaserPower(powerSeries(ii)); 
-    pause(3); % pause for 3 seconds
-
+    pause(1); % pause for 3 seconds
+tic
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
-        pause(0.25)
+        % pause(0.25)
     end
     % the power scanimage thinks it is at each percentage laser power
     SIpower(1,ii) = API.powerPercent2Watt(powerSeries(ii));
+    toc
 end
 
 powerMeasurements.observedPower = observedPower;
@@ -77,7 +78,7 @@ plot(observedPower','.k')
 hold on
 plot(mean(observedPower,1),'-r')
 plot(SIpower, '-b')
-legend('-r','Observed Power','-b', 'SI power')
+legend('Observed Power', 'SI power')
 hold off
 %% Save measured power and what SI thinks it should be
 % 
