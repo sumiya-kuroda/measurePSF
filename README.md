@@ -134,7 +134,7 @@ The quality of the fit that underlies this should be assessed with `mpqc.analyse
 ## PDF report
 You can generate a PDF report of all conducted analyses using 
 ```matlab
->> generateMPSFreport
+>> generateMPQCreport
 ```
 
 ### Requirements

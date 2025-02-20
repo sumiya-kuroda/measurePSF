@@ -1,12 +1,14 @@
-function standard_light_source(channelSave,nFrames,gainsToTest)
+function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
     % Record response to the standard light source on all four channels
     %
-    % function record.standard_light_source(channelSave,nFames,gainsToTest)
+    % function record.standard_light_source(channelSave,nFames,gainsToTest,darkResponse)
     %
     % Purpose
-    % Runs through a series of gain values to record signals from the
-    % standard source. Places data in their own directory, as there is
-    % one file per gain.
+    % Runs through a series of gain values to record mean signals from the standard source.
+    % If nFrames>1 the user is prompted to save dark frames at the same gains. This
+    % is to enable the Lees, et al. SNR analysis. You can also do this by re-running the
+    % function with darkReponse set to true.
+    %
     %
     % INSTRUCTIONS
     % 1. You may have multiple standard light sources. If so, enter them
@@ -19,8 +21,14 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     % channelSave - By default this is all four channels (1:4). But the user
     %         can specify anything they like.
     % nFrames - [Optional, 1 by default] If >1 we save this many frames per gain.
-    %           There is unlikely to be a reason for this.
-    % gainsToTest - vector of gains to test. if empty uses default. TODO --workflow needs fixing here
+    %           A single frame is adequate if you just want a mean value to convert to
+    %           photons having imaged a structured target. If you want to run an SNR
+    %           analysis on the standard source you should set nFrames to about 100.
+    % gainsToTest - If gainsToTest is empty, default values are chosen. If gainsToTest
+    %           is a vector, this range of gains is tested with the standard source.
+    % darkResponse - false by default. If true, user is told to remove all light sources
+    %           and saved data are called "dark_response"
+    %
     %
     %
     % Rob Campbell, SWC AMF, initial commit 2022
@@ -57,6 +65,18 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     if nargin<3
         gainsToTest = [];
     end
+
+
+    if nargin<4
+        darkResponse = false;
+    end
+
+    if darkResponse
+        fprintf('MEASURING DARK RESPONSES!\n')
+        fprintf('REMOVE STANDARD SOURCE, ENSURE ENCLOSURE IS DARK. THEN PRESS RETURN.\n')
+        pause
+    end
+
 
     % Create 'diagnostic' directory in the user's desktop
     saveDir = mpqc.tools.makeTodaysDataDirectory;
@@ -118,10 +138,18 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     if isempty(gainsToTest)
         gainsToTest = getPMTGainsToTest;
     end
+
+    if darkResponse
+        fnamebase = 'dark_response';
+    else
+        fnamebase = 'standard_light_source';
+    end
+
     for ii=1:length(gainsToTest)
         % Set file name and save dir
-        fileStem = sprintf('%s_standard_light_source_%s_%dV__%s', ...
+        fileStem = sprintf('%s_%s_%s_%dV__%s', ...
             SETTINGS.microscope.name, ...
+            fnamebase, ...
             sourceID, ...
             gainsToTest(1,ii), ...
             datestr(now,'yyyy-mm-dd_HH-MM-SS'));
@@ -137,8 +165,13 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     end
 
 
+    if nFrames>1
+        fprintf('** To measure dark responses re-run function with darkResponse=true\n')
+    end
+
     % Report saved file location and copy mpqc settings there
     postAcqTasks(saveDir,fileStem)
+
 
 
     API.turnOffAllPMTs; % Turn off all PMTs
