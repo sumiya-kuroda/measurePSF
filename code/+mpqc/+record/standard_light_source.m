@@ -29,7 +29,8 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
     % darkResponse - false by default. If true, user is told to remove all light sources
     %           and saved data are called "dark_response"
     %
-    %
+    % Examples
+    % >> mpqc.record.standard_light_source([], 100, 300:50:700)
     %
     % Rob Campbell, SWC AMF, initial commit 2022
 
@@ -45,7 +46,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
 
 
     % Process input argument
-    if nargin<1
+    if nargin<1 || isempty(channelSave)
         channelSave = 1:API.numberOfAvailableChannels;
     else
         channelSave = unique(channelSave);
@@ -81,6 +82,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
         clc
         fprintf('\n\n *** Can not automatically set gain range. Please define manually. ***\n\n\n')
         help(['mpqc.record.',mfilename])
+        fprintf('\n\n *** Can not automatically set gain range. Please define manually. ***\n\n\n')
         return
     end
 
@@ -113,9 +115,9 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
             while isempty(selectedIndex)
                 response = input('Enter source number and press return: ');
                 if isnumeric(response) && isscalar(response) && ...
-                 response>0 && response<=length(SETTINGS.QC.sourceIDs)
+                    response>0 && response<=length(SETTINGS.QC.sourceIDs)
                  selectedIndex = response;
-             end
+                end
             end
             sourceID = SETTINGS.QC.sourceIDs{selectedIndex};
         end
@@ -177,7 +179,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
 
 
     if nFrames>1
-        fprintf('** To measure dark responses re-run function with darkResponse=true\n')
+        fprintf('\n\n ****  To measure dark responses re-run function with darkResponse=true  ****\n\n\n')
     end
 
     % Report saved file location and copy mpqc settings there

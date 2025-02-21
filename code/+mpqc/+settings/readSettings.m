@@ -24,6 +24,8 @@ function reformattedSettings = readSettings(fname)
     % Rob Campbell, Biozentrum Basel, initial commit 2017
 
 
+    % TODO -- ensure we can not return strings with spaces that would produce spaces in file names
+
     outputSettings = [];
     allValid = true; % By default all settings are valid
     if nargin<1
