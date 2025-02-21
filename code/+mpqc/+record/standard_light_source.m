@@ -78,8 +78,9 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
 
     % If gains are still empty then the user must be prompted to define them
     if isempty(gainsToTest)
-        fprintf('** Can not automatically set gain range. Please define manually.\n')
-        help(mfilename)
+        clc
+        fprintf('\n\n *** Can not automatically set gain range. Please define manually. ***\n\n\n')
+        help(['mpqc.record.',mfilename])
         return
     end
 
