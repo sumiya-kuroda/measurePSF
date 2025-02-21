@@ -71,6 +71,19 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
         darkResponse = false;
     end
 
+
+    if isempty(gainsToTest)
+        gainsToTest = getPMTGainsToTest;
+    end
+
+    % If gains are still empty then the user must be prompted to define them
+    if isempty(gainsToTest)
+        fprintf('** Can not automatically set gain range. Please define manually.\n')
+        help(mfilename)
+        return
+    end
+
+
     if darkResponse
         fprintf('MEASURING DARK RESPONSES!\n')
         fprintf('REMOVE STANDARD SOURCE, ENSURE ENCLOSURE IS DARK. THEN PRESS RETURN.\n')
@@ -135,9 +148,6 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
 
 
     API.hSI.acqsPerLoop=1;
-    if isempty(gainsToTest)
-        gainsToTest = getPMTGainsToTest;
-    end
 
     if darkResponse
         fnamebase = 'dark_response';

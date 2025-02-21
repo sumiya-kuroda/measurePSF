@@ -20,6 +20,11 @@ function gainsToTest = getPMTGainsToTest(numGains)
     %
     % % TODO ! include example output
     %
+    % Notes
+    % This function fails with the ThorLabs ECU2, which does not return a maximum gain
+    % value. TODO -- can MBF fix this?
+    %
+    %
     % Rob Campbell, SWC AMF, initial commit 2025
 
 
@@ -45,13 +50,27 @@ function gainsToTest = getPMTGainsToTest(numGains)
 
 
     function tPMTgains = generateGainsForPMT(hPMT)
-        if hPMT.pmtSupplyRange_V(2) <= 100 || hPMT.aoRange_V(2) <= 2
-            isMultiAlkali = false;
-        elseif hPMT.pmtSupplyRange_V(2) > 500
-            isMultiAlkali = true;
+
+        if ~isa(hPMT,'dabs.thorlabs.ecu2.PMT')
+            % If it is not a ThorLabs ECU we proceed as follows
+            if hPMT.pmtSupplyRange_V(2) <= 100 || hPMT.aoRange_V(2) <= 2
+                isMultiAlkali = false;
+            elseif hPMT.pmtSupplyRange_V(2) > 500
+                isMultiAlkali = true;
+            else
+                error('getPMTGainsToTest can not determine gain settings.\n')
+            end
+
         else
-            error('getPMTGainsToTest can not determine gain settings.\n')
+
+            % If it *is* a ThorLabs ECU2 then we can not read the the maximum AO range
+            % parameter. It is therefore hard to know what is the gain range. So we return
+            % an empty array.
+
+            tPMTgains = [];
+
         end
+
 
         if isMultiAlkali
             tPMTgains = [0,linspace(500,725,numGains)];
