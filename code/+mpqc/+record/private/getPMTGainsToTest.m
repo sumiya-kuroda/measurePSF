@@ -68,7 +68,7 @@ function gainsToTest = getPMTGainsToTest(numGains)
             % an empty array.
 
             tPMTgains = [];
-
+            return
         end
 
 
