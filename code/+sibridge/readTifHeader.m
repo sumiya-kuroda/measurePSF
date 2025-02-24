@@ -11,7 +11,7 @@ function header = readTiffHeader(fname)
     % fname - relative or absolute path to a ScanImage TIFF stack on disk
     %
     % Outputs
-    % header - sturcture containing the data. Returns only data from the first frame. 
+    % header - structure containing the data. Returns only data from the first frame.
     %
     %
     % Rob Campbell - January 2020, SWC, London
@@ -19,6 +19,7 @@ function header = readTiffHeader(fname)
 
     header=[];
     if ~exist(fname,'file')
+        fprintf('Can not find file %s\n', fname)
         return
     end
 
