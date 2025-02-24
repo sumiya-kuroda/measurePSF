@@ -4,6 +4,9 @@
 
 ### 2025/02/24
 * BUGFIX: correctly display photon counts in lens paper data where multiple channels were acquired at once.
+* BUGFIX: if weighted fit fails do a Huber fit.
+* Minor improvements to lens paper recorder.
+
 
 ### 2025/02/17
 Merge of a bunch of recent changes by Rob Campbell

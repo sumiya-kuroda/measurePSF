@@ -157,7 +157,12 @@ function [result,dataForFit] = compute_quantalsize(frames, count_weight_gamma, m
         Xvals = X;
     end
 
-    coefs_raw = robustfit(Xvals, variance, @(r) W , []);
+    try
+        coefs_raw = robustfit(Xvals, variance, @(r) W , []);
+    catch
+        fprintf('Weighted fit failed. Running fit with plain "huber" regression\n')
+        coefs_raw = robustfit(Xvals, variance, 'huber');
+    end
 
 
 
