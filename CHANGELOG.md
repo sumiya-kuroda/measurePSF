@@ -1,6 +1,10 @@
 
 # Change-Log
 
+
+### 2025/02/24
+* BUGFIX: correctly display photon counts in lens paper data where multiple channels were acquired at once.
+
 ### 2025/02/17
 Merge of a bunch of recent changes by Rob Campbell
 * BREAKING CHANGE! Renamed repo to multiphoton-qc, mpsf -> mpqc. Your settings file will

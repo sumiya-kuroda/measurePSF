@@ -1,4 +1,4 @@
-function n=plotPhotonFit(STATS)
+function plotPhotonFit(STATS)
 % Diagnostic plots for the compute_sensitivity function.
 %
 % function mpqc.analyse.plotPhotonFit(STATS)
@@ -29,11 +29,11 @@ function n=plotPhotonFit(STATS)
 % https://github.com/datajoint/anscombe-numcodecs by Dimitri Yatsenko
 
 
-[~,fname] = fileparts(STATS.filename);
+[~,fname,ext] = fileparts(STATS.filename);
+fname = [fname,ext];
 
 fig = mpqc.tools.returnFigureHandleForFile(fname);
 fig.Name = fname;
-
 
 
 
@@ -63,7 +63,14 @@ title(sprintf('Quantal size: %0.1f. Mean photons per pixel: %0.2f', ...
 %%
 % The converted image
 subplot(2,3,[2,5])
-imStack = mpqc.tools.load3Dtiff(STATS.filename);
+[imStack,metadata]=mpqc.tools.scanImage_stackLoad(fname,false); %Do not subtract the offset
+
+% Correctly index this channel
+chanInd = find(metadata.channelSave == STATS.channel);
+nChans = length(metadata.channelSave);
+
+% Get this channel
+imStack = imStack(:,:,chanInd:nChans:end);
 muIm = mean(imStack,3);
 muIm_p = mpqc.analyse.convertImageToPhotons(muIm, STATS);
 imagesc(floor(muIm_p))

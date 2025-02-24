@@ -45,7 +45,7 @@ function OUT = get_quantalsize_quantalsize_from_file(fname)
 	for ii=1:nChans
 		% Run the analysis
 		tChan = im(:,:,ii:nChans:end);
-		OUT(ii) = mpqc.analyse.compute_quantalsize(tChan);
+		OUT(ii) = mpqc.analyse.compute_quantalsize(tChan,0.2);
 
 		% Fill in extra metadata
 		OUT(ii).channel = metadata.channelSave(ii);
