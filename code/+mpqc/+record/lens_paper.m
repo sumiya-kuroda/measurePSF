@@ -133,6 +133,7 @@ function lens_paper(varargin)
 
         % TODO -- warn if gains across detectors are different. Give option to bail.
         % TODO -- read PMT gains and set file name according to the first active PMT's gain.
+        % TODO -- maybe prompt to set the gain?
 
         % Set file name and save dir
         fileStem = sprintf('%s_lens_paper_%dnm_%dmW__%s', ...

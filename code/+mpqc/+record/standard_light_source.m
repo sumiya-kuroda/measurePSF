@@ -103,7 +103,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
     % Determine the name of the files we will be saving
     SETTINGS=mpqc.settings.readSettings;
 
-    if ~isempty(SETTINGS.QC.sourceIDs)
+    if ~isempty(SETTINGS.QC.sourceIDs) && ~darkResponse
         if length(SETTINGS.QC.sourceIDs)==1
             sourceID = SETTINGS.QC.sourceIDs{1};
         elseif length(SETTINGS.QC.sourceIDs)>1
@@ -125,6 +125,10 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
         sourceID = 'UNSPECIFIED_SOURCE';
         fprintf('NOTE: it is recommended you enter your standard light source names into the YML file.\n')
         fprintf('See function help text\n')
+    end
+
+    if darkResponse
+        sourceID='';
     end
 
     %Record the state of all ScanImage settings we will change so we can change them back
