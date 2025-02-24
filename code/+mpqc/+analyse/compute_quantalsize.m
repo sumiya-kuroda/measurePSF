@@ -130,6 +130,9 @@ function [result,dataForFit] = compute_quantalsize(frames, count_weight_gamma, m
 
 
     %  Keep only count values that are within range.
+    if length(counts)<ind_stop
+        ind_stop = length(counts);
+    end
     counts = counts(ind_start+1:ind_stop);
 
     % Calculate the variance of each count value
