@@ -82,7 +82,13 @@ colorbar
 % The histogram of photon counts
 
 subplot(2,3,3)
-nBins =  round(( max(muIm_p(:)) /2.5)/10)*10;
+maxVal = max(muIm_p(:));
+if maxVal > 20
+    nBins =  round(( maxVal/2.5)/10)*10;
+else
+    nBins = 10;
+end
+
 [n,x] = hist(muIm_p(:),nBins);
 
 plot(x,n,'LineWidth',3)

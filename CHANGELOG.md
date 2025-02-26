@@ -7,6 +7,7 @@
 * BUGFIX: correctly display photon counts in lens paper data where multiple channels were acquired at once.
 * BUGFIX: if weighted fit fails do a Huber fit.
 * BUGFIX: correctly loads ScanImage TIFFs from systems with 2 beams
+* BUGFIX: deal nicely with low photon counts.
 * Minor improvements to lens paper recorder.
 
 
