@@ -143,6 +143,9 @@ function si_metadata = parse_field(tiff_header, si_field)
             if startsWith(string_value,'scanimage')
                 % Avoids certain errors
                 si_metadata(i_img).(fieldname) = string_value;
+            elseif startsWith(string_value,'[scanimage')
+                % TODO: this is a vector, for now we just render as a string
+                si_metadata(i_img).(fieldname) = string_value;
             else
                 si_metadata(i_img).(fieldname) = eval(string_value);
             end
