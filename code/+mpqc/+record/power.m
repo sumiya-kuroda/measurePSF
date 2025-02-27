@@ -54,7 +54,7 @@ SIpower = zeros(1,stepSize);
 powerSeries = 0:percentIncrease:1;
 for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collected already
     API.setLaserPower(powerSeries(ii)); 
-    pause(1); % pause for 3 seconds
+    pause(0.25); % pause for 3 seconds
 tic
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
@@ -72,6 +72,7 @@ powerMeasurements.currentTime = currentTime;
 powerMeasurements.laser_wavelength= laser_wavelength;
 
 % Turn off point
+API.parkBeam % Parks beam in scanimage
 
 % Plot the data and ask user if they want to save
 plot(observedPower','.k')
