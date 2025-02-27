@@ -193,8 +193,8 @@ classdef silinker < handle
 
         function numChans = numberOfAvailableChannels(obj)
             % Return the number of available channels as an integer
-            % These are all the channels that the microscope system can possibly acquire. 
-            % They may not all have a connected PMT. 
+            % These are all the channels that the microscope system can possibly acquire.
+            % They may not all have a connected PMT.
             % TODO -- I think there is no way to know whether one is connected
             numChans = obj.hSI.hChannels.channelsAvailable;
         end % numberOfAvailableChannels
@@ -237,8 +237,24 @@ classdef silinker < handle
             % is used for building file names so the '.' is replaced with '-'
 
             zFactStr = strrep(num2str(obj.hSI.hRoiManager.scanZoomFactor),'.','-');
-
         end % returnZoomFactorAsString
+
+
+        function disableChannelOffsetSubtraction(obj)
+            % Disable the offset subtraction for the PMT inputs
+            %
+            % Purpose
+            % For some data we would like to calculate the offset ourselves rather than
+            % relying on ScanImage's offset subtraction.
+            %
+            % Inputs
+            % none
+            %
+            % Outputs
+            % None
+
+            obj.hSI.hChannels.channelSubtractOffset(:)=0;
+        end % disableChannelOffsetSubtraction
 
 
     end % Close methods

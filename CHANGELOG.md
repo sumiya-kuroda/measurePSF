@@ -2,6 +2,10 @@
 # Change-Log
 
 
+### 2025/02/27
+* Run lens paper and standard source without ScanImage offset subtraction. 
+
+
 ### 2025/02/24
 * NEW: filter uniform slide more aggressively, which is needed for cases with uniform images
 * BUGFIX: correctly display photon counts in lens paper data where multiple channels were acquired at once.
