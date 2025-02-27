@@ -81,6 +81,19 @@ plot(mean(observedPower,1),'-r')
 plot(SIpower, '-b')
 legend('Observed Power', 'SI power')
 hold off
+
+% Add save button
+saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ...
+    'Position', [0.4, 0.025, 0.15, 0.04], 'String', 'Save Data', ...
+    'ToolTip', 'Save data to Desktop', ...
+    'Callback', @saveData_Callback);
+hold off
+
+    function saveData_Callback(ObjectH, EventData)
+        display('button pushed')
+
+    end
+end
 %% Save measured power and what SI thinks it should be
 % 
 % % Set file name and save dir
