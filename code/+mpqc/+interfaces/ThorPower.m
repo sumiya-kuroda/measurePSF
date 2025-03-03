@@ -214,7 +214,7 @@ classdef ThorPower < handle
             delete(obj.GuiFigure);
             obj.shutdown();
         end % delete
-        
+
         
     end
 end% classdef
