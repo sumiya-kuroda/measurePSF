@@ -77,10 +77,12 @@ API.parkBeam % Parks beam in scanimage
 % Plot the data and ask user if they want to save
 plot(observedPower','.k')
 hold on
-plot(mean(observedPower,1),'-r')
-plot(SIpower, '-b')
-legend('Observed Power', 'SI power')
-hold off
+meanPower = plot(mean(observedPower,1),'-r');
+estPower = plot(SIpower*1000, '-b'); % Puts SI power into mW
+legend([meanPower estPower], 'Mean Observed Power', 'SI Power')
+title([num2str(laser_wavelength), 'nm'])
+ylabel('Power (mW)')
+
 
 % Add save button
 saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ...
@@ -90,20 +92,17 @@ saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ..
 hold off
 
 %% Save measured power and what SI thinks it should be
-   SETTINGS=mpqc.settings.readSettings;
-        fileStem = sprintf('%s_power_calib_%dnm_%s__%s', ...
-            SETTINGS.microscope.name, laser_wavelength, ...
-            datestr(now,'yyyy-mm-dd_HH-MM-SS'));
-    fullfile(saveDir,fileStem)
+SETTINGS=mpqc.settings.readSettings;
+fileStem = sprintf('%s_power_calib_%dnm_%s__%s', ...
+    SETTINGS.microscope.name, laser_wavelength, ...
+    datestr(now,'yyyy-mm-dd_HH-MM-SS'));
+fullfile(saveDir,fileStem);
     function saveData_Callback(ObjectH, EventData)
-        display('button pushed')
-        % Set file name and save dir
-        
-    save(fullfile(saveDir,fileStem), "powerMeasurements")
+        % display('button pushed')
+        save(fullfile(saveDir,fileStem), "powerMeasurements")
+        % Report where the file was saved
+        mpqc.tools.reportFileSaveLocation(saveDir,fileStem)
     end
-
-% Report where the file was saved
-mpqc.tools.reportFileSaveLocation(saveDir,fileStem)
 
 % Save system settings to this location
 settingsFilePath = mpqc.settings.findSettingsFile;
