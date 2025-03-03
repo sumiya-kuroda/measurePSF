@@ -24,10 +24,10 @@ if API.linkSucceeded == false
 end
 
 % Create 'diagnostic' directory in the user's desktop
-% saveDir = mpqc.tools.makeTodaysDataDirectory;
-% if isempty(saveDir)
-%     return
-% end
+    saveDir = mpqc.tools.makeTodaysDataDirectory;
+    if isempty(saveDir)
+        return
+    end
 
 %Record the state of all ScanImage settings we will change so we can change them back
 settings = mpqc.tools.recordScanImageSettings(API);
@@ -53,9 +53,9 @@ SIpower = zeros(1,stepSize);
 % then put it  in a loop!
 powerSeries = 0:percentIncrease:1;
 for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collected already
-    API.setLaserPower(powerSeries(ii)); 
+    API.setLaserPower(powerSeries(ii));
     pause(0.25); % pause for 3 seconds
-tic
+    tic
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
         % pause(0.25)
@@ -89,34 +89,27 @@ saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ..
     'Callback', @saveData_Callback);
 hold off
 
+%% Save measured power and what SI thinks it should be
+   SETTINGS=mpqc.settings.readSettings;
+        fileStem = sprintf('%s_power_calib_%dnm_%s__%s', ...
+            SETTINGS.microscope.name, laser_wavelength, ...
+            datestr(now,'yyyy-mm-dd_HH-MM-SS'));
+    fullfile(saveDir,fileStem)
     function saveData_Callback(ObjectH, EventData)
         display('button pushed')
-
+        % Set file name and save dir
+        
+    save(fullfile(saveDir,fileStem), "powerMeasurements")
     end
+
+% Report where the file was saved
+mpqc.tools.reportFileSaveLocation(saveDir,fileStem)
+
+% Save system settings to this location
+settingsFilePath = mpqc.settings.findSettingsFile;
+copyfile(settingsFilePath, saveDir)
+
+% Reapply original scanimage settings
+mpqc.tools.reapplyScanImageSettings(API,settings);
+
 end
-%% Save measured power and what SI thinks it should be
-% 
-% % Set file name and save dir
-% SETTINGS=mpqc.settings.readSettings;
-% fileStem = sprintf('%s_power_calib_%dnm_%s__%s', ...
-%     SETTINGS.microscope.name, ...
-%     laser_wavelength, ...
-%     datestr(now,'yyyy-mm-dd_HH-MM-SS'));
-% 
-% 
-% % API.hSI.hScan2D.logFileStem=fileStem;
-% % API.hSI.hScan2D.logFilePath=saveDir;
-% % API.hSI.hScan2D.logFileCounter=1;
-% % 
-% % API.acquireAndWait;
-% 
-% 
-% % Report where the file was saved
-% mpqc.tools.reportFileSaveLocation(saveDir,fileStem)
-% 
-% % Save system settings to this location
-% settingsFilePath = mpqc.settings.findSettingsFile;
-% copyfile(settingsFilePath, saveDir)
-% 
-% % Reapply original scanimage settings
-% mpqc.tools.reapplyScanImageSettings(API,settings);
