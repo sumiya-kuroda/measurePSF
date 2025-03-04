@@ -59,17 +59,17 @@ SIpower = zeros(1,stepSize);
 
 % then put it  in a loop!
 powerSeries = 0:percentIncrease:1;
-for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collected already
+for ii = 1:length(powerSeries-1) 
     API.setLaserPower(powerSeries(ii));
     pause(0.125); % pause for 3 seconds
-    tic
+    disp(['Measuring ', num2str(powerSeries(ii)*100),'% power'])
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
         % pause(0.25)
     end
     % the power scanimage thinks it is at each percentage laser power
     SIpower(1,ii) = API.powerPercent2Watt(powerSeries(ii));
-    toc
+    
 end
 delete(powermeter)
 
