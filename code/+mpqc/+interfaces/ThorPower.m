@@ -211,7 +211,6 @@ classdef ThorPower < handle
             
         function delete(obj)
             %This function closes the communication port and close the gui.
-            delete(obj.GuiFigure);
             obj.shutdown();
         end % delete
 
