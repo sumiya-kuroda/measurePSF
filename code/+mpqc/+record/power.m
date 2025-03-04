@@ -1,4 +1,4 @@
-function powerMeasurements = power(varargin)
+function varargout = power(varargin)
 % Measuring the power out of the objective at different percent power in SI
 %
 % function mpqc.record.power('wavelength', value)
@@ -7,6 +7,13 @@ function powerMeasurements = power(varargin)
 % Uses a powermeter in the sample plane to measure the true laser power out
 % of the object at different percent power levels in scanImage. Also save
 % the predicted power given by scanImage.
+%
+% Inputs
+% ....
+%
+% Outputs
+% optionally return data structure...
+%
 %
 % Isabell Whiteley, SWC AMF, inital commit 2025
 
@@ -54,7 +61,7 @@ SIpower = zeros(1,stepSize);
 powerSeries = 0:percentIncrease:1;
 for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collected already
     API.setLaserPower(powerSeries(ii));
-    pause(0.25); % pause for 3 seconds
+    pause(0.125); % pause for 3 seconds
     tic
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
@@ -64,6 +71,7 @@ for ii = 1:length(powerSeries-1) % should loop 19 times, first datapoint collect
     SIpower(1,ii) = API.powerPercent2Watt(powerSeries(ii));
     toc
 end
+delete(powermeter)
 
 powerMeasurements.observedPower = observedPower;
 powerMeasurements.SIpower = SIpower;
@@ -75,6 +83,7 @@ powerMeasurements.laser_wavelength= laser_wavelength;
 API.parkBeam % Parks beam in scanimage
 
 % Plot the data and ask user if they want to save
+figure
 plot(observedPower','.k')
 hold on
 meanPower = plot(mean(observedPower,1),'-r');
@@ -110,5 +119,10 @@ copyfile(settingsFilePath, saveDir)
 
 % Reapply original scanimage settings
 mpqc.tools.reapplyScanImageSettings(API,settings);
+
+%optionally return data structure
+if nargout > 0
+    varargout{1} = powerMeasurements;
+end
 
 end
