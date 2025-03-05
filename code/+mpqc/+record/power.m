@@ -9,11 +9,14 @@ function varargout = power(varargin)
 % the predicted power given by scanImage.
 %
 % Inputs
-% ....
+% wavelength
 %
 % Outputs
 % optionally return data structure...
-%
+% powerMeasurements.observedPower
+% powerMeasurements.currentTime
+% powerMeasurements.SIpower
+% powerMeasurements.laser_wavelength
 %
 % Isabell Whiteley, SWC AMF, inital commit 2025
 
@@ -21,7 +24,7 @@ function varargout = power(varargin)
 out =  parseInputVariable(varargin{:});
 laser_wavelength=out.wavelength;
 percentIncrease = 0.05;
-stepSize = round(1/percentIncrease);
+numSteps = round(1/percentIncrease)+1; % to include the 0% step
 
 % Connect to ScanImage using the linker class
 API = sibridge.silinker;
@@ -54,23 +57,35 @@ API.setLaserPower(.01) ; % set laser power to 1%
 
 
 %% Measure power
-observedPower = zeros(10,stepSize);
-SIpower = zeros(1,stepSize);
+observedPower = zeros(10,numSteps);
+SIpower = zeros(1,numSteps);
+powerSeriesPercent = (0:percentIncrease:1).*100;
+powerSeriesDec = 0:percentIncrease:1;
 
-% then put it  in a loop!
-powerSeries = 0:percentIncrease:1;
-for ii = 1:length(powerSeries-1) 
-    API.setLaserPower(powerSeries(ii));
+figure
+% observed = plot(powerSeriesPercent,observedPower','.k');
+hold on
+meanVal = plot(powerSeriesPercent,mean(observedPower,1),'-r');
+est = plot(powerSeriesPercent,SIpower*1000, '-b');
+
+for ii = 1:length(powerSeriesDec) % 21 measurement steps because starting at 0% power
+    API.setLaserPower(powerSeriesDec(ii));
     pause(0.125); % pause for 3 seconds
-    disp(['Measuring ', num2str(powerSeries(ii)*100),'% power'])
+    disp(['Measuring ', num2str(powerSeriesPercent(ii)),'% power'])
     for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
         observedPower(jj,ii) = powermeter.getPower;
         % pause(0.25)
     end
     % the power scanimage thinks it is at each percentage laser power
-    SIpower(1,ii) = API.powerPercent2Watt(powerSeries(ii));
-    
+    SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
+
+    % observed.XData = powerSeriesPercent(ii);
+    % observed.YData = observedPower(:,ii);
+    meanVal.YData(ii) = mean(observedPower(:,ii),1);
+    est.YData(ii) = SIpower(1,ii)*1000;
+    drawnow
 end
+
 delete(powermeter)
 
 powerMeasurements.observedPower = observedPower;
@@ -83,20 +98,20 @@ powerMeasurements.laser_wavelength= laser_wavelength;
 API.parkBeam % Parks beam in scanimage
 
 % Plot the data and ask user if they want to save
-figure
-plot(powerSeries*100,observedPower','.k')
-hold on
-meanPower = plot(powerSeries*100,mean(observedPower,1),'-r');
-estPower = plot(powerSeries*100,SIpower*1000, '-b'); % Puts SI power into mW
-legend([meanPower estPower], 'Mean Observed Power', 'SI Power')
+% figure
+plot(powerSeriesPercent,observedPower','.k')
+% hold on
+% meanPower = plot(powerSeriesPercent,mean(observedPower,1),'-r');
+% estPower = plot(powerSeriesPercent,SIpower*1000, '-b'); % Puts SI power into mW
+legend([meanVal est], 'Mean Observed Power', 'SI Power')
 title(['Wavelength = ',num2str(laser_wavelength), 'nm'])
 ylabel('Power (mW)')
 xlabel('Percent power')
 
 
-% Add save button
+% Add save button 
 saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ...
-    'Position', [0.4, 0.025, 0.15, 0.04], 'String', 'Save Data', ...
+    'Position', [0.75, 0.015, 0.15, 0.04], 'String', 'Save Data', ...
     'ToolTip', 'Save data to Desktop', ...
     'Callback', @saveData_Callback);
 hold off
