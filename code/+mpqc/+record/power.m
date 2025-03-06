@@ -84,8 +84,8 @@ for ii = 1:length(powerSeriesDec) % 21 measurement steps because starting at 0% 
 
     % observed.XData = powerSeriesPercent(ii);
     observed.YData = observedPower(:);
-    % meanVal.YData(ii) = mean(observedPower(:,ii),1);
-    % est.YData(ii) = SIpower(1,ii)*1000;
+    meanVal.YData(ii) = mean(observedPower(ii,:),2);
+    est.YData(ii) = SIpower(1,ii)*1000;
     drawnow
 end
 
@@ -106,7 +106,7 @@ API.parkBeam % Parks beam in scanimage
 % hold on
 % meanPower = plot(powerSeriesPercent,mean(observedPower,1),'-r');
 % estPower = plot(powerSeriesPercent,SIpower*1000, '-b'); % Puts SI power into mW
-legend([meanVal est], 'Mean Observed Power', 'SI Power')
+legend([observed meanVal est],'Raw values', 'Mean Observed Power', 'SI Power')
 title(['Wavelength = ',num2str(laser_wavelength), 'nm'])
 ylabel('Power (mW)')
 xlabel('Percent power')
