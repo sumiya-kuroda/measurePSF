@@ -25,6 +25,7 @@ out =  parseInputVariable(varargin{:});
 laser_wavelength=out.wavelength;
 percentIncrease = 0.05;
 numSteps = round(1/percentIncrease)+1; % to include the 0% step
+sampleReps = 10;
 
 % Connect to ScanImage using the linker class
 API = sibridge.silinker;
@@ -57,32 +58,34 @@ API.setLaserPower(.01) ; % set laser power to 1%
 
 
 %% Measure power
-observedPower = zeros(10,numSteps);
+% observedPower = zeros(sampleReps,numSteps)*nan;
+observedPower = zeros(numSteps,sampleReps)*nan;
 SIpower = zeros(1,numSteps);
 powerSeriesPercent = (0:percentIncrease:1).*100;
+powerSeriesPercentMatrix = repmat(linspace(0,100,numSteps)',1,sampleReps);
 powerSeriesDec = 0:percentIncrease:1;
 
 figure
-% observed = plot(powerSeriesPercent,observedPower','.k');
+observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
 hold on
-meanVal = plot(powerSeriesPercent,mean(observedPower,1),'-r');
+meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
 est = plot(powerSeriesPercent,SIpower*1000, '-b');
 
 for ii = 1:length(powerSeriesDec) % 21 measurement steps because starting at 0% power
     API.setLaserPower(powerSeriesDec(ii));
     pause(0.125); % pause for 3 seconds
     disp(['Measuring ', num2str(powerSeriesPercent(ii)),'% power'])
-    for jj = 1:size(observedPower,1) % takes 10 measurements at each percentage, pausing for 0.25s between each
-        observedPower(jj,ii) = powermeter.getPower;
+    for jj = 1:size(observedPower,2) % takes 10 measurements at each percentage, pausing for 0.25s between each
+        observedPower(ii,jj) = powermeter.getPower;
         % pause(0.25)
     end
     % the power scanimage thinks it is at each percentage laser power
     SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
 
     % observed.XData = powerSeriesPercent(ii);
-    % observed.YData = observedPower(:,ii);
-    meanVal.YData(ii) = mean(observedPower(:,ii),1);
-    est.YData(ii) = SIpower(1,ii)*1000;
+    observed.YData = observedPower(:);
+    % meanVal.YData(ii) = mean(observedPower(:,ii),1);
+    % est.YData(ii) = SIpower(1,ii)*1000;
     drawnow
 end
 
@@ -99,7 +102,7 @@ API.parkBeam % Parks beam in scanimage
 
 % Plot the data and ask user if they want to save
 % figure
-plot(powerSeriesPercent,observedPower','.k')
+% plot(powerSeriesPercent,observedPower','.k')
 % hold on
 % meanPower = plot(powerSeriesPercent,mean(observedPower,1),'-r');
 % estPower = plot(powerSeriesPercent,SIpower*1000, '-b'); % Puts SI power into mW
