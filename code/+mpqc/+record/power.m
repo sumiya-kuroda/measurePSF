@@ -12,7 +12,6 @@ function varargout = power(varargin)
 % wavelength
 %
 % Outputs
-% optionally return data structure...
 % powerMeasurements.observedPower
 % powerMeasurements.currentTime
 % powerMeasurements.SIpower
@@ -58,7 +57,7 @@ API.setLaserPower(.01) ; % set laser power to 1%
 
 
 %% Measure power
-% observedPower = zeros(sampleReps,numSteps)*nan;
+
 observedPower = zeros(numSteps,sampleReps)*nan;
 SIpower = zeros(1,numSteps);
 powerSeriesPercent = (0:percentIncrease:1).*100;
@@ -82,7 +81,6 @@ for ii = 1:length(powerSeriesDec) % 21 measurement steps because starting at 0% 
     % the power scanimage thinks it is at each percentage laser power
     SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
 
-    % observed.XData = powerSeriesPercent(ii);
     observed.YData = observedPower(:);
     meanVal.YData(ii) = mean(observedPower(ii,:),2);
     est.YData(ii) = SIpower(1,ii)*1000;
@@ -101,16 +99,10 @@ powerMeasurements.laser_wavelength= laser_wavelength;
 API.parkBeam % Parks beam in scanimage
 
 % Plot the data and ask user if they want to save
-% figure
-% plot(powerSeriesPercent,observedPower','.k')
-% hold on
-% meanPower = plot(powerSeriesPercent,mean(observedPower,1),'-r');
-% estPower = plot(powerSeriesPercent,SIpower*1000, '-b'); % Puts SI power into mW
 legend([observed meanVal est],'Raw values', 'Mean Observed Power', 'SI Power')
 title(['Wavelength = ',num2str(laser_wavelength), 'nm'])
 ylabel('Power (mW)')
 xlabel('Percent power')
-
 
 % Add save button 
 saveData_PushButton = uicontrol('Style', 'PushButton', 'Units', 'Normalized', ...
