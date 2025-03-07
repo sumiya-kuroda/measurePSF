@@ -12,6 +12,8 @@ function [imStack,metadata] = scanImage_stackLoad(fileName,subtractOffset)
 %
 % Inputs (optional)
 % subtractOffset - if true, subtract the offset from the image data. Default is true.
+%              NOTE: setting to false only has an effect if the data were saved without
+%              offset subtraction
 %
 % Outputs
 % imStack - 3D stack
@@ -54,6 +56,9 @@ function [imStack,metadata] = scanImage_stackLoad(fileName,subtractOffset)
 
 
     if subtractOffset == false
+        if any(metadata.channelSubtractOffset)
+            fprintf('Data saved with offset subtracted. Returning offset subtracted data.\n')
+        end
         return
     end
 

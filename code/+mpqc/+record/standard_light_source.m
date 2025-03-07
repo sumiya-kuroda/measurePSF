@@ -1,12 +1,14 @@
-function standard_light_source(channelSave,nFrames,gainsToTest)
+function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
     % Record response to the standard light source on all four channels
     %
-    % function record.standard_light_source(channelSave,nFames,gainsToTest)
+    % function record.standard_light_source(channelSave,nFames,gainsToTest,darkResponse)
     %
     % Purpose
-    % Runs through a series of gain values to record signals from the
-    % standard source. Places data in their own directory, as there is
-    % one file per gain.
+    % Runs through a series of gain values to record mean signals from the standard source.
+    % If nFrames>1 the user is prompted to save dark frames at the same gains. This
+    % is to enable the Lees, et al. SNR analysis. You can also do this by re-running the
+    % function with darkReponse set to true.
+    %
     %
     % INSTRUCTIONS
     % 1. You may have multiple standard light sources. If so, enter them
@@ -19,9 +21,16 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     % channelSave - By default this is all four channels (1:4). But the user
     %         can specify anything they like.
     % nFrames - [Optional, 1 by default] If >1 we save this many frames per gain.
-    %           There is unlikely to be a reason for this.
-    % gainsToTest - vector of gains to test. if empty uses default. TODO --workflow needs fixing here
+    %           A single frame is adequate if you just want a mean value to convert to
+    %           photons having imaged a structured target. If you want to run an SNR
+    %           analysis on the standard source you should set nFrames to about 100.
+    % gainsToTest - If gainsToTest is empty, default values are chosen. If gainsToTest
+    %           is a vector, this range of gains is tested with the standard source.
+    % darkResponse - false by default. If true, user is told to remove all light sources
+    %           and saved data are called "dark_response"
     %
+    % Examples
+    % >> mpqc.record.standard_light_source([], 100, 300:50:700)
     %
     % Rob Campbell, SWC AMF, initial commit 2022
 
@@ -37,7 +46,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
 
 
     % Process input argument
-    if nargin<1
+    if nargin<1 || isempty(channelSave)
         channelSave = 1:API.numberOfAvailableChannels;
     else
         channelSave = unique(channelSave);
@@ -58,6 +67,33 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
         gainsToTest = [];
     end
 
+
+    if nargin<4
+        darkResponse = false;
+    end
+
+
+    if isempty(gainsToTest)
+        gainsToTest = getPMTGainsToTest;
+    end
+
+    % If gains are still empty then the user must be prompted to define them
+    if isempty(gainsToTest)
+        clc
+        fprintf('\n\n *** Can not automatically set gain range. Please define manually. ***\n\n\n')
+        help(['mpqc.record.',mfilename])
+        fprintf('\n\n *** Can not automatically set gain range. Please define manually. ***\n\n\n')
+        return
+    end
+
+
+    if darkResponse
+        fprintf('MEASURING DARK RESPONSES!\n')
+        fprintf('REMOVE STANDARD SOURCE, ENSURE ENCLOSURE IS DARK. THEN PRESS RETURN.\n')
+        pause
+    end
+
+
     % Create 'diagnostic' directory in the user's desktop
     saveDir = mpqc.tools.makeTodaysDataDirectory;
     if isempty(saveDir)
@@ -67,7 +103,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     % Determine the name of the files we will be saving
     SETTINGS=mpqc.settings.readSettings;
 
-    if ~isempty(SETTINGS.QC.sourceIDs)
+    if ~isempty(SETTINGS.QC.sourceIDs) && ~darkResponse
         if length(SETTINGS.QC.sourceIDs)==1
             sourceID = SETTINGS.QC.sourceIDs{1};
         elseif length(SETTINGS.QC.sourceIDs)>1
@@ -79,9 +115,9 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
             while isempty(selectedIndex)
                 response = input('Enter source number and press return: ');
                 if isnumeric(response) && isscalar(response) && ...
-                 response>0 && response<=length(SETTINGS.QC.sourceIDs)
+                    response>0 && response<=length(SETTINGS.QC.sourceIDs)
                  selectedIndex = response;
-             end
+                end
             end
             sourceID = SETTINGS.QC.sourceIDs{selectedIndex};
         end
@@ -89,6 +125,10 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
         sourceID = 'UNSPECIFIED_SOURCE';
         fprintf('NOTE: it is recommended you enter your standard light source names into the YML file.\n')
         fprintf('See function help text\n')
+    end
+
+    if darkResponse
+        sourceID='';
     end
 
     %Record the state of all ScanImage settings we will change so we can change them back
@@ -105,9 +145,11 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
 
     API.hSI.hChannels.loggingEnable=true;
 
-
     API.hSI.hChannels.channelSave = channelSave;
 
+    % Do not subtract channel offsets. This probably matters for using lens paper data
+    % to calibrate the standard source.
+    API.disableChannelOffsetSubtraction;
 
 
     API.turnOnAllPMTs; % Turn on all PMTs
@@ -115,13 +157,18 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
 
 
     API.hSI.acqsPerLoop=1;
-    if isempty(gainsToTest)
-        gainsToTest = getPMTGainsToTest;
+
+    if darkResponse
+        fnamebase = 'dark_response';
+    else
+        fnamebase = 'standard_light_source';
     end
+
     for ii=1:length(gainsToTest)
         % Set file name and save dir
-        fileStem = sprintf('%s_standard_light_source_%s_%dV__%s', ...
+        fileStem = sprintf('%s_%s_%s_%dV__%s', ...
             SETTINGS.microscope.name, ...
+            fnamebase, ...
             sourceID, ...
             gainsToTest(1,ii), ...
             datestr(now,'yyyy-mm-dd_HH-MM-SS'));
@@ -137,8 +184,13 @@ function standard_light_source(channelSave,nFrames,gainsToTest)
     end
 
 
+    if nFrames>1
+        fprintf('\n\n ****  To measure dark responses re-run function with darkResponse=true  ****\n\n\n')
+    end
+
     % Report saved file location and copy mpqc settings there
     postAcqTasks(saveDir,fileStem)
+
 
 
     API.turnOffAllPMTs; % Turn off all PMTs

@@ -55,7 +55,14 @@ function uniform_slide(fname,varargin)
     % The imresize along rows removes artifacts caused by amplifier ringing
     plotData = imresize(plotData,[round(size(plotData,1)*0.75), size(plotData,2)]);
     plotData = imresize(plotData,size(imstack,[1,2]));
-    plotData = medfilt2(plotData,[7,7]); %filter heavily
+    fSize=round(size(plotData,1)/10);
+    plotData = medfilt2(plotData,[fSize,fSize],'symmetric'); %filter heavily
+
+    % Normalise (The offset has already been subtracted when data are loaded)
+    plotData = plotData-min(plotData(:));
+    plotData = plotData/max(plotData(:));
+
+
 
     imagesc(plotData)
     axis equal tight
@@ -65,8 +72,9 @@ function uniform_slide(fname,varargin)
 
     hold on
     nContours = 10;
-    contour(plotData,nContours,'Color',[0.95,0.95,1],'linewidth',1)
-    colormap(gray(nContours+1))
+    contour(plotData, 0:1/nContours:1, 'Color', [0.95,0.95,1], 'linewidth', 1)
+    color_tmp = gray(nContours);
+    colormap(color_tmp)
 
 
     % Add diagonal lines which we will use later to associate with the next plot
@@ -108,13 +116,12 @@ function uniform_slide(fname,varargin)
     % Plot intensity cross-sections along the red/cyan lines
     subplot(1,2,2)
 
-    normPlotData = plotData/max(plotData(:));
     switch crossSections
         case 'diagonal'
             micsPerDataPoint = sqrt(2*micsPerPixelXY^2);
 
             f_diag = eye(length(plotData));
-            yData = normPlotData(find(f_diag));
+            yData = plotData(find(f_diag));
             xData = (1:length(yData)) * micsPerDataPoint;
             xData = xData - mean(xData);
 
@@ -122,15 +129,15 @@ function uniform_slide(fname,varargin)
 
             hold on
 
-            yData = normPlotData(find(rot90(f_diag)));
+            yData = plotData(find(rot90(f_diag)));
 
             hXsection2 = plot(xData,yData,'-c','linewidth',2);
 
         case 'scanner'
             micsPerDataPoint = micsPerPixelXY;
 
-            xSectionX = normPlotData(:, round(size(normPlotData,2)/2));
-            xSectionY = normPlotData(round(size(normPlotData,2)/2),:);
+            xSectionX = plotData(:, round(size(plotData,2)/2));
+            xSectionY = plotData(round(size(plotData,2)/2),:);
 
             xData = (1:length(xSectionY)) * micsPerDataPoint;
             xData = xData - mean(xData);

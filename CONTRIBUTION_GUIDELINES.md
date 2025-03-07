@@ -35,6 +35,7 @@ Isabell Whitely [PR #70](https://github.com/SWC-Advanced-Microscopy/measurePSF/p
 * Max line length is 100 characters but you can break this rule occasionally if that makes sense. It is better to sometimes have an exceptionally long line than to break up that line in an ugly and hard to read way. 
 * Where possible follow the MATLAB editor's [checkcode](https://uk.mathworks.com/help/matlab/ref/checkcode.html) suggestions, but if doing so will make things ugly then feel free to ignore them. 
 * Ident size should be 4 spaces (i.e. two indents should be 8 spaces). Do not use tabs. These are the settings used by default in the MATLAB editor.
+* Avoid indenting many lines with an `if` statement in a loop. Where possible NOT the statement and bypass the loop with a `continue`. 
 
 ## Format Guidelines
 ### Save files with Unix line endings. 

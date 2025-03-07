@@ -1,12 +1,27 @@
 
 # Change-Log
 
-### 2024/02/17
+
+### 2025/02/27
+* Run lens paper and standard source without ScanImage offset subtraction. 
+
+
+### 2025/02/24
+* NEW: filter uniform slide more aggressively, which is needed for cases with uniform images
+* BUGFIX: correctly display photon counts in lens paper data where multiple channels were acquired at once.
+* BUGFIX: if weighted fit fails do a Huber fit.
+* BUGFIX: correctly loads ScanImage TIFFs from systems with 2 beams
+* BUGFIX: deal nicely with low photon counts.
+* Minor improvements to lens paper recorder.
+
+
+### 2025/02/17
 Merge of a bunch of recent changes by Rob Campbell
+* BREAKING CHANGE! Renamed repo to multiphoton-qc, mpsf -> mpqc. Your settings file will
+  now need to be renamed `MPQC_SystemSettings.yml`.
 * General doc text tidying. 
 * Add `CONTRIBUTION_GUIDELINES.md`
 * Made a standalone `CHANGELOG.md` and tidied it and improve formatting.
-* Renamed repo to multiphoton-qc, mpsf -> mpqc
 * Lens paper function now saves all channels.
 * Standard source and lens paper produce more similar data (same pixel size)
 * Dark noise is longer recorded along with electrical noise.

@@ -1,7 +1,7 @@
-function varargout=generateMPSFreport(data_dir)
+function varargout=generateMPQCreport(data_dir)
     % Makes all plots defined by the gen plot structure
     %
-    % function generatePDFreport(data_dir)
+    % function generateMPQCreport(data_dir)
     %
     % Purpose
     % Makes all available plots from a data directory and tiles them over the screen.
