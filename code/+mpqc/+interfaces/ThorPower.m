@@ -1,184 +1,177 @@
 classdef ThorPower < handle
-    % mic.powermeter.PM100D: Matlab Instrument class to control power meter PM100D.
+    % Interface class for ThorLabs power meters
     %
-    % ## Description
-    % Controls power meter PM100D, gets the current power. It can also gets
-    % the current temperature. The wavelengtj of the light can also be
-    % set for power measurement (within the sensor limits). The gui shows
-    % a movie of the plot of the
-    % measured power where the shown period can be modified. It also shows
-    % the current power and the maximum measured power. To run this code
-    % you need the power meter to be connected to the machine.
+    % mpqc.interfaces.ThorPower
     %
-    % ## Constructor
-    % Example: P = mic.powermeter.PM100D; P.gui
+    % Purpose
+    % Controls ThorLabs power meters using VISA. Gets laser power, temperature, sets
+    % the illumination wavelength, etc.
     %
-    % ## Key Functions:
-    % constructor(), exportState(), send(), minMaxWavelength(), getWavelength(), measure(), setWavelength(), shutdown()
+    % Example
+    % tPower = mpqc.interfaces.ThorPower
+    % tPower.getPower
+    % delete(tPower)
     %
-    % ## REQUIREMENTS:
-    %    NI_DAQ  (VISA and ICP Interfaces) should be installed.
-    %    Data Acquisition Toolbox Support Package for National Instruments
-    %    NI-DAQmx Devices: This add-on can be installed from link:
-    %    https://www.mathworks.com/matlabcentral/fileexchange/45086-data-acquisition-toolbox-support-package-for-national-instruments-ni-daqmx-devices
-    %    MATLAB 2021a or higher.
     %
-    % ### CITATION: Mohamadreza Fazel, Lidkelab, 2017.
+    % Requirements
+    % NI VISA should be installed. See also: (TODO -- DO WE NEED THAT?)
+    % https://www.mathworks.com/matlabcentral/fileexchange/45086-data-acquisition-toolbox-support-package-for-national-instruments-ni-daqmx-devices
     %
-    % Adapted from: https://github.com/LidkeLab/matlab-instrument-control/tree/main
-    
+    %
+    % Acknowledgements
+    % This class is based on one created by Mohamadreza Fazel (Lidkelab) at:
+    % https://github.com/LidkeLab/matlab-instrument-control/tree/main
+    %
+    %
+    % Isabell Whiteley, SWC AMF, initial commit 2025
+
+
     properties
-        VisaObj             %Visa Object (Virtual Instrument Standard Architecture=VISA)
-        Limits              %Min and max of wavelength.
-        Lambda              %Wavelength       
+        visaObj           % Visa Object (Virtual Instrument Standard Architecture=VISA)
+        wavelengthLimits  % Min and max of wavelength.
+        currentLambda     % Wavelength
     end
 
     properties (Hidden,SetObservable)
-        Power              % Last measured power
-        Temperature    % Last measured temperature
+        lastMeasuredPower
+        lastMeasuredTemperature
     end
-    
-    
-    methods (Static)
+
+
+    methods
         function obj=ThorPower
-            %This is the constructor.
-            %example PM = mic.powermeter.PM100D
-            
+            % mpqc.interfaces.ThorPower
+            %
+            % Inputs
+            % none
+            %
+
             % Find a VISA-USB object.
             vendorinfo = visadevlist;
             s=vendorinfo(1,1).ResourceName;
-            
+
             % TODO -- no test that s is not empty
-            obj.VisaObj = visadev(s);
+            obj.visaObj = visadev(s);
 
             % Connect to instrument object
-            %fopen(obj.VisaObj);
+            %fopen(obj.visaObj); %% WHY COMMENTED OUT??
+
             % Measure the limits of the wavelength.
-            obj.Limits=minMaxWavelength(obj);
-        end
+            obj.getMinMaxWavelength(obj);
+        end % constructor
 
-        function funcTest()
-            %testing the class.
-            try
-                TestObj=mic.powermeter.PM100D();
-                fprintf('Constructor is run and an object of the class is made.\n');
-                Limit = minMaxWavelength(TestObj);
-                fprintf('Min wavelength: %d, Max wavelength: %d\n', Limit(1),Limit(2));
-                getWavelength(TestObj);
-                fprintf('The current wavelength is %d nm.\n',TestObj.Lambda);
-                TestObj.Lambda=600;
-                setWavelength(TestObj);
-                fprintf('The wavelength is set to 600 nm.\n');
-                State=exportState(TestObj);
-                fprintf('The exportState function was successfully tested.\n');
-                TestObj.delete();
-                fprintf('The port is closed and the object is deleted.\n');
-                fprintf('The class is successfully tested :)\n')
-            catch ME
-                fprintf('Sorry an error has ocured :(\n');
-                ME
-            end
-        end
-    end
-    
-    methods
 
-        
+        function delete(obj)
+            obj.shutdown();
+        end % destructor
+
+
         function Reply=send(obj,Message)
-            %Sending a message to the power-meter and getting a feedback.
-            %fprintf(obj.VisaObj,Message);
-            %Reply=fscanf(obj.VisaObj,'%s');
-            Reply = writeread(obj.VisaObj,Message);
+            % Sends a message to the power-meter and receives feedback.
 
-        end
-        
+            Reply = writeread(obj.visaObj,Message);
+
+        end % send
+
+
         function devInfo = reportDeviceInfo(obj)
             % Return string describing the model number, etc, of the power meter
             devInfo = obj.send('*IDN?');
-        end
-        
+        end % reportDeviceInfo
+
+
         function devInfo = reportSensorInfo(obj)
             % Return string describing the sensor head
             devInfo = obj.send(':SYST:SENS:IDN?');
-        end
-        
+        end % reportSensorInfo
+
+
         function autoRange = isAutoRangeEnabled(obj)
             % Return 1 if autorange is enabled. 0 otherwise
             autoRange = obj.send(':SENS:POWER:RANG:AUTO?');
             autoRange = str2num(autoRange);
-        end
-        
+        end % isAutoRangeEnabled
+
+
         function disableAutoRange(obj)
             % Disable auto-range
-            fprintf(obj.VisaObj,'SENSE:POWER:RANGE:AUTO OFF');
-        end
-        
+            fprintf(obj.visaObj,'SENSE:POWER:RANGE:AUTO OFF');
+        end % disableAutoRange
+
+
         function enableAutoRange(obj)
             % Enable auto-range
-            fprintf(obj.VisaObj,'SENSE:POWER:RANGE:AUTO ON');
-        end
-        
+            fprintf(obj.visaObj,'SENSE:POWER:RANGE:AUTO ON');
+        end % enableAutoRange
+
+
         function setAutoRange(obj,autoRange)
             % Set auto-range.
             % autoRange is a string (TODO: for now)
             %
             % e.g.
             % setAutoRange('0.1')
-            fprintf(obj.VisaObj,sprintf('SENSE:POWER:RANGE %s',autoRange));
-        end
-        
-        function Limits=minMaxWavelength(obj)
-            %Reading the limits of the wavelength.
+            fprintf(obj.visaObj,sprintf('SENSE:POWER:RANGE %s',autoRange));
+        end % setAutoRange
+
+
+        function varargout = getMinMaxWavelength(obj)
+            % Read the wavelength limits of the sensor and log these
             %
             R1=obj.send('SENS:CORR:WAV? MIN');
             R2=obj.send('SENS:CORR:WAV? MAX');
-            Limits = [str2double(R1) str2double(R2)];
-        end
-        
+            obj.wavelengthLimits = [str2double(R1) str2double(R2)];
+
+            if nargout>0
+                varargout{1} = obj.wavelengthLimits;
+            end
+        end % getMinMaxWavelength
+
+
         function varargout = getWavelength(obj)
             %Reading the current wavelength of the instrument.
             %
-            % If no output arguments the wavelength is printed to screen. 
+            % If no output arguments the wavelength is printed to screen.
             % If an output is requested, the wavelength is returned as a
-            % scalar and nothing is printed to screen. 
-            
-            Lambda=str2double(send(obj,'SENS:CORR:WAV?'));
-            
-            obj.Lambda = Lambda;
+            % scalar and nothing is printed to screen.
+
+            currentLambda=str2double(send(obj,'SENS:CORR:WAV?'));
+
+            obj.currentLambda = currentLambda;
 
             if nargout==0
-                fprintf('Wavelength: %d nm \n',obj.Lambda);
+                fprintf('Wavelength: %d nm \n',obj.currentLambda);
             else
-                varargout{1} = Lambda;
+                varargout{1} = currentLambda;
             end
-        end
-        
+        end % getWavelength
+
 
         function varargout = getPower(obj)
-            % Read power in mW (?)
-            
+            % Read power in mW
+
             Out=str2double(obj.send('MEASURE:POWER?'))*1000;
-            obj.Power = Out;
+            obj.lastMeasuredPower = Out;
             if nargout==0
                 fprintf('Power is: %0.4f mW \n', Out);
             else
                 varargout{1} = Out;
             end
-        end
+        end % getPower
 
 
         function varargout = getTemperature(obj)
             % Read temperature in degrees C
 
             Out=str2double(obj.send('MEASURE:TEMPERATURE?'));
-            obj.Temperature= Out;
+            obj.lastMeasuredTemperature= Out;
             if nargout==0
                 fprintf('Temperature is: %0.1f degrees C \n', Out);
             else
                 varargout{1} = Out;
             end
-        end
-        
+        end % getTemperature
+
 
         function setWavelength(obj,lambda)
             % Setting the wavelength
@@ -187,33 +180,23 @@ classdef ThorPower < handle
             % lambda - the wavelength to set the meter to in nm
             %
 
-            % TODO -- use the range of detector
-            minL = 400;
-            maxL = 1100;
-            if lambda < minL | lambda > maxL
+            if lambda < obj.wavelengthLimits(1) | lambda > obj.wavelengthLimits(2)
                 fprintf('The wavelength is out of the range [%dm, %dnm].', ...
                     minL, maxL);
             end
-            
-            s = sprintf('CORRECTION:WAVELENGTH %g nm',lambda);
-            %fprintf(obj.VisaObj, s);
-            write(obj.VisaObj,s,"string");
 
-            obj.Lambda = lambda;
-        end
+            s = sprintf('CORRECTION:WAVELENGTH %g nm',lambda);
+            write(obj.visaObj,s,"string");
+
+            obj.currentLambda = lambda;
+        end % setWavelength
 
 
         function shutdown(obj)
             %This function is called in the destructor to delete the communication port.
-            delete(obj.VisaObj);
-            
-        end
-            
-        function delete(obj)
-            %This function closes the communication port and close the gui.
-            obj.shutdown();
-        end % delete
+            delete(obj.visaObj);
+        end % shutdown
 
-        
-    end
+    end % methods
+
 end% classdef

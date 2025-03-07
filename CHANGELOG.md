@@ -2,6 +2,11 @@
 # Change-Log
 
 
+### 2025/03/07
+* NEW: Add facility for checking calibrated power at the sample plane automatically. Isabell Whiteley [PR #95]([https://github.com/SWC-Advanced-Microscopy/multiphoton-qc/pull/95).
+
+
+
 ### 2025/02/27
 * Run lens paper and standard source without ScanImage offset subtraction. 
 
@@ -31,7 +36,7 @@ Merge of a bunch of recent changes by Rob Campbell
 
 ### 2024/07/19
 * NEW FEATURE: `mpsf.record` functions now all accept parameter/value pairs via standard interface.
-Inputs that are required not supplied when the function is called are requested interactively at the CLI. Isabell Whitely [PR #70](https://github.com/SWC-Advanced-Microscopy/measurePSF/pull/70).
+Inputs that are required not supplied when the function is called are requested interactively at the CLI. Isabell Whiteley [PR #70](https://github.com/SWC-Advanced-Microscopy/measurePSF/pull/70).
 
 
 ### 2024/07/05
