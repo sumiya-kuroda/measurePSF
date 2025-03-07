@@ -239,6 +239,22 @@ classdef silinker < handle
             zFactStr = strrep(num2str(obj.hSI.hRoiManager.scanZoomFactor),'.','-');
         end % returnZoomFactorAsString
 
+        function pointBeam(obj)
+            obj.hSI.scanPointBeam
+        end
+
+        function parkBeam(obj)
+            obj.hSI.abort
+        end
+
+        function setLaserPower(obj,powerFraction) %,percentPower)
+           % obj.hSI.hBeams.powerFractions = percentPower; 
+           obj.hSI.hBeams.hBeams{1}.setPowerFraction(powerFraction)
+        end
+
+        function powerIn_mW = powerPercent2Watt(obj,powerFraction)
+            powerIn_mW = obj.hSI.hBeams.hBeams{1}.convertPowerFraction2PowerWatt(powerFraction);
+        end
 
         function disableChannelOffsetSubtraction(obj)
             % Disable the offset subtraction for the PMT inputs
