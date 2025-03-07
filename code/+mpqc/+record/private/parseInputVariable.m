@@ -85,13 +85,13 @@ function out = parseInputVariable(varargin)
     end
 
     if isempty(params.Results.wavelength)
-        default=920;
+        default=780;
         txt = sprintf('Please enter wavelength (nm) [%d]: ',default);
         out.wavelength = round(parseResponse(txt,default));
     end
 
     if isempty(params.Results.power) && ~strcmp(callerFile,'power.m')
-        default=20;
+        default=75;
         txt = sprintf('Please enter power (mW) [%d]: ',default);
         out.power = round(parseResponse(txt,default));
     end

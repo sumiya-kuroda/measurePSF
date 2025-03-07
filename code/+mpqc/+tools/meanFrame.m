@@ -78,6 +78,8 @@ classdef meanFrame < handle
         end %constructor
 
         function delete(obj)
+            delete(obj.listener_acqState)
+            delete(obj.listener_frameDone)
             delete(obj.hFig)
         end
 

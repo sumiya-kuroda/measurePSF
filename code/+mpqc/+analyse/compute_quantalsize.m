@@ -1,7 +1,7 @@
 function [result,dataForFit] = compute_quantalsize(frames, count_weight_gamma, min_count_proportion)
     % Compute photon quantal_size
     %
-    % function result = compute_quantalsize(frames, count_weight_gamma, min_count_proportion)
+    % function result = mpqc.analyse.compute_quantalsize(frames, count_weight_gamma, min_count_proportion)
     %
     % Purpose
     % Compute the number of photons per pixel (the quantal size or system sensitivity) from
@@ -130,6 +130,9 @@ function [result,dataForFit] = compute_quantalsize(frames, count_weight_gamma, m
 
 
     %  Keep only count values that are within range.
+    if length(counts)<ind_stop
+        ind_stop = length(counts);
+    end
     counts = counts(ind_start+1:ind_stop);
 
     % Calculate the variance of each count value
@@ -154,7 +157,12 @@ function [result,dataForFit] = compute_quantalsize(frames, count_weight_gamma, m
         Xvals = X;
     end
 
-    coefs_raw = robustfit(Xvals, variance, @(r) W , []);
+    try
+        coefs_raw = robustfit(Xvals, variance, @(r) W , []);
+    catch
+        fprintf('Weighted fit failed. Running fit with plain "huber" regression\n')
+        coefs_raw = robustfit(Xvals, variance, 'huber');
+    end
 
 
 

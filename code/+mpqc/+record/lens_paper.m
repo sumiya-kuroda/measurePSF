@@ -30,9 +30,8 @@ function lens_paper(varargin)
     %  'numGains' - The number of PMT gains at which to record the data. If not defined,
     %               the current PMT gains are used and one set of images obtained only. If
     %               "numGains" is non empty and >1 then a series of recordings at
-    %               different gains is made. NOTE: set numGains to -1 to use the default
-    %               gains that are used for the standard light source.
-    %               TODO -- IT SHOULD ALWAYS ASK FOR A GAIN AND SAVE TO FILE NAME!
+    %               different gains is made. NOTE: set numGains to -1 to use the default.
+    %
     %
     % The channels to image is determined based on the channel selected to be saved
     % within ScanImage.
@@ -115,6 +114,9 @@ function lens_paper(varargin)
 
     % TODO -- make it acquire on all available PMTS?
 
+    % Do not subtract channel offsets. This probably matters for using lens paper data
+    % to calibrate the standard source.
+    API.disableChannelOffsetSubtraction;
 
     API.hSI.hStackManager.framesPerSlice=numFramesToAcquire;
 
@@ -131,6 +133,10 @@ function lens_paper(varargin)
     if isempty(numGains)
         % If no gain was defined, we simply acquire with existing
         % PMT gains
+
+        % TODO -- warn if gains across detectors are different. Give option to bail.
+        % TODO -- read PMT gains and set file name according to the first active PMT's gain.
+        % TODO -- maybe prompt to set the gain?
 
         % Set file name and save dir
         fileStem = sprintf('%s_lens_paper_%dnm_%dmW__%s', ...
@@ -153,7 +159,7 @@ function lens_paper(varargin)
 
         for ii=1:length(gainsToTest)
 
-            % Do not record zero gain.
+            % In case a zero gain is specified across all detectors, do not record it.
             if sum(gainsToTest(:,ii)) == 0
                 continue
             end
