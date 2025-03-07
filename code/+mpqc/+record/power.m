@@ -42,10 +42,10 @@ end
 %Record the state of all ScanImage settings we will change so we can change them back
 settings = mpqc.tools.recordScanImageSettings(API);
 
-API.turnOffAllPMTs % is this how to do this? How does it know how many PMTs there are?
+API.turnOffAllPMTs 
 
-% Connect to Powermeter, set wavelength, zero
-powermeter = mpqc.interfaces.ThorPower; % IS THIS HOW TO CALL THE POWERMETER CLASS?
+% Connect to Powermeter, set wavelength
+powermeter = mpqc.interfaces.ThorPower; 
 powermeter.setWavelength(laser_wavelength) % sends new wavelength to powermeter
 
 % Tell SI to point
@@ -72,11 +72,11 @@ est = plot(powerSeriesPercent,SIpower*1000, '-b');
 
 for ii = 1:length(powerSeriesDec) % 21 measurement steps because starting at 0% power
     API.setLaserPower(powerSeriesDec(ii));
-    pause(0.125); % pause for 3 seconds
+    pause(0.1); % pause for 0.1 seconds
     disp(['Measuring ', num2str(powerSeriesPercent(ii)),'% power'])
-    for jj = 1:size(observedPower,2) % takes 10 measurements at each percentage, pausing for 0.25s between each
+    for jj = 1:size(observedPower,2) % takes 10 measurements at each percentage, pausing for 0.1s between each
         observedPower(ii,jj) = powermeter.getPower;
-        % pause(0.25)
+        pause(0.1)
     end
     % the power scanimage thinks it is at each percentage laser power
     SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
