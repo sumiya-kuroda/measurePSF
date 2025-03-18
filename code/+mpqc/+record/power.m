@@ -31,7 +31,7 @@ function varargout = power(varargin)
     numSteps = 21; % to include the 0% step
 
     % The number of times to measure power at each percent power value
-    sampleReps = 10;
+    sampleReps = 1;
 
 
     % Connect to ScanImage using the linker class

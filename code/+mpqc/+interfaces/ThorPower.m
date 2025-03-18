@@ -57,7 +57,7 @@ classdef ThorPower < handle
             %fopen(obj.visaObj); %% WHY COMMENTED OUT??
 
             % Measure the limits of the wavelength.
-            obj.getMinMaxWavelength(obj);
+            obj.getMinMaxWavelength;
         end % constructor
 
 
