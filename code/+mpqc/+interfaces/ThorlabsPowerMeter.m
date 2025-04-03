@@ -85,7 +85,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %   3.10 ----- 01 SEP 2022 ----- Test the script on latest TLPM driver and MATLAB. Some bugs are corrected as well
 
     
-    properties (Constant, Hidden)
+    properties (Hidden)
         % Path to .net *.dll files (edit as appropriate)
         % pwd --- Current working directory of this file
         % (depending on the location where you put this file)
@@ -592,15 +592,29 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 warning('This command is not supported on %s.',obj.modelName);
             end
         end
+
+        function loaddlls(obj) % Load DLLs
+            %LOADDLLS Load needed dll libraries.
+            %   Usage: obj.loaddlls;
+            %   Change the path of dll to suit you application.
+            fname = fullfile(obj.METERPATHDEFAULT,obj.TLPMDLL);
+            if exist(fname,'file')
+                 try   % Load in DLLs if not already loaded
+                    NET.addAssembly(fname);
+                catch % DLLs did not load
+                    error('Unable to load .NET assemblies')
+                 end
+            else
+                fprintf('Can not find file %s\n', fname)
+            end
+        end %loaddlls
+
         
-    end
-    
-    methods (Static)
-        function [resourceName,modelName,serialNumber,Manufacturer,DeviceAvailable]=listdevices()  % Read a list of resource names
+        function [resourceName,modelName,serialNumber,Manufacturer,DeviceAvailable]=listdevices(obj)  % Read a list of resource names
             %LISTDEVICES List available resources.
             %   Usage: obj.listdevices;
             %   Retrive all the available devices and return it back.
-            ThorlabsPowerMeter.loaddlls; % Load DLLs
+            obj.loaddlls; % Load DLLs
             findResource=Thorlabs.TLPM_64.Interop.TLPM(System.IntPtr);  % Build device list
             [~,count]=findResource.findRsrc; % Get device list
             for i=1:1:4
@@ -631,18 +645,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
             findResource.Dispose();
         end
-        function loaddlls() % Load DLLs
-            %LOADDLLS Load needed dll libraries.
-            %   Usage: obj.loaddlls;
-            %   Change the path of dll to suit you application.
-            if ~exist(ThorlabsPowerMeter.TLPMCLASSNAME,'class')
-                 try   % Load in DLLs if not already loaded
-                    NET.addAssembly([ThorlabsPowerMeter.METERPATHDEFAULT,ThorlabsPowerMeter.TLPMDLL]);
-                catch % DLLs did not load
-                    error('Unable to load .NET assemblies')
-                end
-            end
-        end
+
     end
 end
 
