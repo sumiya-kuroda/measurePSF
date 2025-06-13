@@ -124,6 +124,7 @@ function varargout = power(varargin)
         'ToolTip', 'Save data to Desktop', ...
         'Callback', @saveData_Callback);
 
+    % TODO -- add calibrate button
 
     % TODO -- could add a second button that returns the structure to the base workspace
 
