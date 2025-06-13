@@ -70,7 +70,7 @@ function varargout = power(varargin)
 
 
     %% Build a figure to display the data as we go
-    figure
+    t = figure;
     observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
     hold on
     meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
@@ -115,6 +115,7 @@ function varargout = power(varargin)
 
 
     % A save button is added at the end so the user can optionally save data
+    figure(t)
     saveData_PushButton = uicontrol(...
         'Style', 'PushButton', ...
         'Units', 'Normalized', ...
