@@ -175,8 +175,8 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             else
                 obj.numberOfResourceName=size(obj.resourceName,1);
                 fprintf('Found the following %d device(s):\r',obj.numberOfResourceName);
-                for i=1:1:size(obj.resourceName,1)
-                    fprintf('\t\t%d) %s\r',i,obj.resourceName(i,:));
+                for ii=1:size(obj.resourceName,1)
+                    fprintf('\t\t%d) %s\r',ii,obj.resourceName(ii,:));
                 end
                 fprintf('Use <Your_Meter_List>.connect(resourceName) to connect a single/the first device.\r');
                 fprintf('or\r');
@@ -436,9 +436,9 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.sensorInfo;
             %   Read the information of sensor connected and store it in
             %   the properties of the object.
-            for i=1:1:3
-                descr{i}=System.Text.StringBuilder;
-                descr{i}.Capacity=1024;
+            for ii=1:3
+                descr{ii}=System.Text.StringBuilder;
+                descr{ii}.Capacity=1024;
             end
             [~,type,subtype,sensor_flag]=obj.deviceNET.getSensorInfo(descr{1}, descr{2}, descr{3});
             obj.sensorName=char(descr{1}.ToString);
@@ -644,16 +644,19 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %LISTDEVICES List available resources.
             %   Usage: obj.listdevices;
             %   Retrive all the available devices and return it back.
+            fprintf('Looking for devices...\n')
             findResource=Thorlabs.TLPM_64.Interop.TLPM(System.IntPtr);  % Build device list
             [~,count]=findResource.findRsrc; % Get device list
-            for ii=1:1:4
+
+            for ii=1:4
                 descr{ii}=System.Text.StringBuilder;
                 descr{ii}.Capacity=2048;
             end
+
             if count>0
-                for ii=0:1:count-1
-                    findResource.getRsrcName(i,descr{1});
-                    [~,Device_Available]=findResource.getRsrcInfo(i, descr{2}, descr{3}, descr{4});
+                for ii=0:count-1
+                    findResource.getRsrcName(ii,descr{1});
+                    [~,Device_Available]=findResource.getRsrcInfo(ii, descr{2}, descr{3}, descr{4});
                     resourceNameArray(ii+1,:)=char(descr{1}.ToString);
                     modelNameArray{ii+1}=char(descr{2}.ToString);
                     serialNumberArray(ii+1,:)=char(descr{3}.ToString);
