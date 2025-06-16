@@ -70,7 +70,7 @@ function varargout = power(varargin)
 
 
     %% Build a figure to display the data as we go
-    t = figure;
+    powerPlot = figure;
     observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
     hold on
     meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
@@ -112,16 +112,14 @@ function varargout = power(varargin)
     mpqc.tools.reapplyScanImageSettings(API,settings);
 
 
-
-
     % A save button is added at the end so the user can optionally save data
-    figure(t)
     saveData_PushButton = uicontrol(...
         'Style', 'PushButton', ...
         'Units', 'Normalized', ...
         'Position', [0.75, 0.015, 0.15, 0.04], ...
         'String', 'Save Data', ...
         'ToolTip', 'Save data to Desktop', ...
+        'Parent',powerPlot, ...
         'Callback', @saveData_Callback);
 
     % TODO -- add calibrate button
