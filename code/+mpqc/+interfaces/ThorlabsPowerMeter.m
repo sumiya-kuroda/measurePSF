@@ -163,6 +163,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   list all the device available. It will return a list of all
             %   the available device(s).
 
+
             success=obj.loaddlls;
             if ~success
                 return
@@ -618,6 +619,13 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             % 
             %   returns true if successfully loads DLL. False otherwise.
 
+            % For the DLLs to actually work we need to also add to the Windows path the
+            % directory that contains "TLPM_64.dll". We assume that everyone is on 64 bit
+            % so we hard-code this here:
+            dllPath = 'C:\Program Files\IVI Foundation\VISA\Win64\Bin';
+            if exist(dllPath,'dir') && ~contains(getenv('PATH'),dllPath)
+                setenv('PATH', [dllPath ';' getenv('PATH')]);
+            end
 
             % If needed change the path of dll to suit you application.
             fname = fullfile(obj.METERPATHDEFAULT,obj.TLPMDLL);
