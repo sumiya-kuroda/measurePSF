@@ -1,8 +1,8 @@
 classdef ThorlabsPowerMeter < matlab.mixin.Copyable
-    %ThorlabsPowerMeter Matlab class to control Thorlabs power meters
-    %   Driver for Thorlabs power meter
-    %   It is a 'wrapper' to control Thorlabs devices via the Thorlabs .NET
-    %   DLLs.
+    % ThorlabsPowerMeter Matlab class to control Thorlabs power meters
+    %
+    %   Interface class for ThorLabs power meters. This is a 'wrapper' to control 
+    %   Thorlabs devices via the Thorlabs .NET DLLs.
     %
     %   User Instructions:
     %       1. Download the Optical Power Monitor from the Thorlabs website:
@@ -16,7 +16,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %       The common path of the *.dll files on Windows is:
     %       C:\Program Files\IVI Foundation\VISA\VisaCom64\Primary Interop Assemblies\Thorlabs.TLPM_64.Interop.dll
     %
-    %       4. This scripts need only the .net wrapper dll so follow the instruction for C#/.Net
+    %       4. This class needs only the .NET wrapper dll, so follow the instruction for C#/.Net
     %
     %       5. Edit MOTORPATHDEFAULT below to point to the location of the DLLs
     %
@@ -25,36 +25,49 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %       7. Please refer to the examples provided
     %
     %   For developers:
-    %   The definition for all the classes can be found in the C sharp exmple
-    %   provided by Thorlab. (Shipped together with the software.)
+    %   The definition for all the classes can be found in the C# example
+    %   provided by ThorLabs. (Shipped together with the software.)
     %
-    %   Example:
-    %   close all
-    %   clear
+    %
+    %
+    %   EXAMPLES
+    %
+    %   Connecting 01:
     %   meter_list=ThorlabsPowerMeter;                              % Initiate the meter_list
     %   DeviceDescription=meter_list.listdevices;               	% List available device(s)
     %   test_meter=meter_list.connect(DeviceDescription);           % Connect single/the first devices
-    %   %or                                                         % Connect single/the first devices
-    %   %test_meter=meter_list.connect(DeviceDescription,1);        % Connect single/the first devices
+    %
+    %   Connecting 02:
+    %   test_meter=meter_list.connect(DeviceDescription,1);         % Connect single/the first devices
     %   test_meter.setWaveLength(635);                              % Set sensor wavelength
     %   test_meter.setDispBrightness(0.3);                          % Set display brightness
     %   test_meter.setAttenuation(0);                               % Set Attenuation
     %   test_meter.sensorInfo;                                      % Retrive the sensor info
+    %
+    %   Setting auto-range:
     %   test_meter.setPowerAutoRange(1);                            % Set Autorange
-    %   % or
-    %   % test_meter.setPowerRange(0.01);                           % Set manual range
-    %   pause(5)                                                    % Pause the program a bit to allow the power meter to autoadjust
+    %   test_meter.setPowerRange(0.01);                            % Set manual range
+    %
+    %   Setting other values:
     %   test_meter.setAverageTime(0.01);                            % Set average time for the measurement
     %   test_meter.setTimeout(1000);                                % Set timeout value 
-    %   % test_meter.darkAdjust;                                      % (PM400 ONLY)
-    %   % test_meter.getDarkOffset;                                   % (PM400 ONLY)
+    %
+    %   PMT400 only:
+    %   test_meter.darkAdjust;
+    %   test_meter.getDarkOffset;
+    %
+    %   Update the power reading(with interal period of 0.5s):
     %   for i=1:1:100   
-    %       test_meter.updateReading(0.5);                          % Update the power reading(with interal period of 0.5s)
+    %       test_meter.updateReading(0.5);                          
     %       fprintf('%.10f%c\r',test_meter.meterPowerReading,test_meter.meterPowerUnit);
     %   end
     %   test_meter.updateReading_V(0.5);                            % To demonstrate that only certain sensors can use this function
     %                                                               % A warning message is expected here for most of the models
-    %   test_meter.disconnect;                                      % Disconnect and release
+    %
+    %   Disconnect and release:
+    %   test_meter.disconnect
+    %
+    %   -----------------
     %
     %   Author: Zimo Zhao
     %   Dept. Engineering Science, University of Oxford, Oxford OX1 3PJ, UK
@@ -79,10 +92,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %   Version History:
     %   1.00 ----- 21 May 2021 ----- Initial Release
     %   1.01 ----- 17 Aug 2021 ----- Clarify the way of utilizing *.dll files
-    %   2.00 ----- 27 Aug 2021 ----- Support multiple power meters connection
+    %   2.00 ----- 27 Aug 2021 ----- Support connection of multiple power meters
     %   2.01 ----- 26 Sep 2021 ----- Add force connection function to bypass the device availability check.
     %   3.00 ----- 01 Feb 2022 ----- Add functions: setPowerRange, setPowerAutoRange, setTimeout, setAverageTime, updateReading_V
     %   3.10 ----- 01 SEP 2022 ----- Test the script on latest TLPM driver and MATLAB. Some bugs are corrected as well
+    %   3.11 ----- 16 JUN 2025 ----- Fail gracefully if DLL not installed. Minor tidy to docs. [RAAC]
 
     
     properties (Hidden)
@@ -92,7 +106,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
         % This line points to folder 'Thorlabs_DotNet_dll' under the same directory
         % Comment out this line and uncomment next line to use customized dll file directory
         % METERPATHDEFAULT=[pwd '\Thorlabs_DotNet_dll\'];
-        METERPATHDEFAULT=['C:\Program Files (x86)\Microsoft.NET\Primary Interop Assemblies\'];
+        METERPATHDEFAULT='C:\Program Files (x86)\Microsoft.NET\Primary Interop Assemblies\';
         
         %   *.dll files to be loaded
         %
@@ -148,7 +162,12 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   This function first loads the dlls from the path and then
             %   list all the device available. It will return a list of all
             %   the available device(s).
-            obj.loaddlls;
+
+            success=obj.loaddlls;
+            if ~success
+                return
+            end
+
             [obj.resourceName,obj.modelName,obj.serialNumber,obj.Manufacturer,obj.DeviceAvailable]=obj.listdevices;
             if isempty(obj.resourceName)
                 obj.isConnected=false;
@@ -198,7 +217,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 ID_Query (1,1) {mustBeNumeric} = 1 % (default) Query the ID
                 Reset_Device (1,1) {mustBeNumeric} = 1 % (default) Reset
             end
-            %obj.listdevices;
+            %obj.listdevices; %% TODO -- REMOVE
             if ~obj.isConnected
                 try
                     obj_copy=copy(obj);
@@ -242,7 +261,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 ID_Query (1,1) {mustBeNumeric} = 1 % (default) Query the ID
                 Reset_Device (1,1) {mustBeNumeric} = 1 % (default) Reset
             end
-            %obj.listdevices;
+            %obj.listdevices; %% TODO -- remove
             try
                 obj_copy=copy(obj);
                 % The core method to create the power meter instance
@@ -593,19 +612,30 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
         end
 
-        function loaddlls(obj) % Load DLLs
+        function success = loaddlls(obj) % Load DLLs
             %LOADDLLS Load needed dll libraries.
-            %   Usage: obj.loaddlls;
-            %   Change the path of dll to suit you application.
+            %   Usage: success = obj.loaddlls;
+            % 
+            %   returns true if successfully loads DLL. False otherwise.
+
+
+            % If needed change the path of dll to suit you application.
             fname = fullfile(obj.METERPATHDEFAULT,obj.TLPMDLL);
+            success=false;
             if exist(fname,'file')
-                 try   % Load in DLLs if not already loaded
+                try
+                    fprintf('Importing DLL: %s\n', fname)
                     NET.addAssembly(fname);
+                    success=true;
                 catch % DLLs did not load
                     error('Unable to load .NET assemblies')
                  end
             else
-                fprintf('Can not find file %s\n', fname)
+                fprintf(['\nFailed to load ThorLabs power meter DLL!\n', ...
+                    'Can not find file %s\n\n', ...
+                    'You probably need to install the power meter GUI from: \n',...
+                    'https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=OPM\n\n'], ...
+                    fname)
             end
         end %loaddlls
 
@@ -614,22 +644,21 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %LISTDEVICES List available resources.
             %   Usage: obj.listdevices;
             %   Retrive all the available devices and return it back.
-            obj.loaddlls; % Load DLLs
             findResource=Thorlabs.TLPM_64.Interop.TLPM(System.IntPtr);  % Build device list
             [~,count]=findResource.findRsrc; % Get device list
-            for i=1:1:4
-                descr{i}=System.Text.StringBuilder;
-                descr{i}.Capacity=2048;
+            for ii=1:1:4
+                descr{ii}=System.Text.StringBuilder;
+                descr{ii}.Capacity=2048;
             end
             if count>0
-                for i=0:1:count-1
+                for ii=0:1:count-1
                     findResource.getRsrcName(i,descr{1});
                     [~,Device_Available]=findResource.getRsrcInfo(i, descr{2}, descr{3}, descr{4});
-                    resourceNameArray(i+1,:)=char(descr{1}.ToString);
-                    modelNameArray{i+1}=char(descr{2}.ToString);
-                    serialNumberArray(i+1,:)=char(descr{3}.ToString);
-                    ManufacturerArray(i+1,:)=char(descr{4}.ToString);
-                    DeviceAvailableArray(i+1,:)=Device_Available;
+                    resourceNameArray(ii+1,:)=char(descr{1}.ToString);
+                    modelNameArray{ii+1}=char(descr{2}.ToString);
+                    serialNumberArray(ii+1,:)=char(descr{3}.ToString);
+                    ManufacturerArray(ii+1,:)=char(descr{4}.ToString);
+                    DeviceAvailableArray(ii+1,:)=Device_Available;
                 end
                 resourceName=resourceNameArray;
                 modelName=modelNameArray;

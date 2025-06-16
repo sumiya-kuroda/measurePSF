@@ -4,9 +4,10 @@ function varargout = power(varargin)
     % function mpqc.record.power('wavelength', value)
     %
     % Purpose
-    % Uses a powermeter in the sample plane to measure the true laser power at the objective
-    % at different percent power levels in ScanImage. Used to check that the power calibration
-    % is accurate. The function also saves these predicted power values.
+    % Uses a powermeter in the sample plane to measure the true laser power at the 
+    % objective at different percent power levels in ScanImage. Used to check that 
+    % the power calibration is accurate. The function also saves these predicted 
+    % power values.
     %
     %
     % Inputs (optional param/val pairs. If not defined, a CLI prompt appears)
@@ -20,12 +21,30 @@ function varargout = power(varargin)
     %   .laser_wavelength
     %
     %
+    % Requirements
+    % You must have installed ThorLabs power meter GUI from:
+    % https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=OPM
+    % See mpqc.interfaces.ThorlabsPowerMeter
+    %
+    %
     % Isabell Whiteley, SWC AMF, initial commit 2025
+
 
 
     % Parse inputs and ensure user has supplied the current wavelength
     out =  parseInputVariable(varargin{:});
     laser_wavelength=out.wavelength;
+
+
+    % Connect to Powermeter and set wavelength. Bail out if we can't connect to it
+    meterlist = mpqc.interfaces.ThorlabsPowerMeter;
+    if isempty(meterlist.modelName)
+        return
+    end
+    DeviceDescription=meterlist.listdevices;                % List available device(s)
+    powermeter=meterlist.connect(DeviceDescription);  
+    powermeter.setWaveLength(laser_wavelength) % sends new wavelength to powermeter
+
 
     % The number of steps over which the sample the power fraction range.
     numSteps = 21; % to include the 0% step
@@ -45,12 +64,6 @@ function varargout = power(varargin)
     settings = mpqc.tools.recordScanImageSettings(API);
 
     API.turnOffAllPMTs
-
-    % Connect to Powermeter, set wavelength
-    meterlist = mpqc.interfaces.ThorlabsPowerMeter;
-    DeviceDescription=meterlist.listdevices;               	% List available device(s)
-    powermeter=meterlist.connect(DeviceDescription);  
-    powermeter.setWaveLength(laser_wavelength) % sends new wavelength to powermeter
 
     % Tell SI to point
     API.pointBeam
