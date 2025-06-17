@@ -126,14 +126,9 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
 
     properties
         % These properties are within Matlab wrapper
-        isConnected=false;          % Flag set if device connected
-        resourceName;               % USB resource name
+        isConnected=false;          % Flag set to device index in list if device connected
+        deviceList                  % Structure that is the output of listdevices
         resourceNameConnected;      % USB resource name
-        modelName;                  % Power meter model name
-        serialNumber;               % Power meter serial number
-        Manufacturer;               % Power meter manufacturer
-        DeviceAvailable;            % Power meter avaliablity
-        numberOfResourceName;       % Number of available resources
         sensorName;                 % Sensor name
         sensorSerialNumber;         % Sensor serial number
         sensorCalibrationMessage;   % Sensor calibration information
@@ -154,7 +149,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     end
 
     methods
-        function obj = ThorlabsPowerMeter()
+        function obj = ThorlabsPowerMeter(deviceList)
             %ThorlabsPowerMeter Construct an instance of this class
             %   This function first loads the dlls from the path and then
             %   list all the device available. It will return a list of all
@@ -166,19 +161,21 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 return
             end
 
-            [obj.resourceName,obj.modelName,obj.serialNumber,obj.Manufacturer,obj.DeviceAvailable]=obj.listdevices;
-            if isempty(obj.resourceName)
+            if nargin>0
+                obj.deviceList = deviceList;
+            else
+                obj.listdevices;
+            end
+
+            if isempty(obj.deviceList)
                 obj.isConnected=false;
                 warning('No Resource is found, please check the connection.');
             else
-                obj.numberOfResourceName=size(obj.resourceName,1);
-                fprintf('Found the following %d device(s):\r',obj.numberOfResourceName);
-                for ii=1:size(obj.resourceName,1)
-                    fprintf('\t\t%d) %s\r',ii,obj.resourceName(ii,:));
+                numberOfResources=length(obj.deviceList);
+                fprintf('Found the following %d device(s):\r',numberOfResources);
+                for ii=1:length(obj.deviceList)
+                    fprintf('\t\t%d) %s\r',ii,obj.deviceList(ii).resourceName);
                 end
-                fprintf('Use <Your_Meter_List>.connect(resourceName) to connect a single/the first device.\r');
-                fprintf('or\r');
-                fprintf('Use <Your_Meter_List>.connect(resourceName,index) to connect multiple devices.\r\r');
             end
         end
 
@@ -188,18 +185,17 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   This function disconnects the device and exits.
             if obj.isConnected
                 try
-                    warning('Program Terminated with Device Connected.');
                     obj.disconnect;
-                catch
-                    warning('Failed to release the device.');
+                catch ME
+                    warning('Failed to release the device:\n%s',ME.message);
                 end
-            else % Cannot disconnect because device is not connected
-                %fprintf('Device Released Properly.\r\r');
+            else 
+                % Cannot disconnect because device is not connected
             end
 
         end
 
-        function obj_copy=connect(obj,resource,resource_index,ID_Query,Reset_Device)
+        function connect(obj,resource_index,ID_Query,Reset_Device)
             %CONNECT Connect to the specified resource.
             %   Usage: obj.connect(resource);
             %   By default, it will connect to the first resource on the
@@ -210,71 +206,30 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   to modify the default values.
             arguments
                 obj
-                resource
                 resource_index (1,1) {mustBeNumeric} = 1 % (default) First resource
                 ID_Query (1,1) {mustBeNumeric} = 1 % (default) Query the ID
                 Reset_Device (1,1) {mustBeNumeric} = 1 % (default) Reset
             end
-            %obj.listdevices; %% TODO -- REMOVE
-            if ~obj.isConnected
+
+            if ~obj.isConnected && ~isempty(obj.deviceList)
                 try
-                    obj_copy=copy(obj);
                     % The core method to create the power meter instance
-                    obj_copy.deviceNET=Thorlabs.TLPM_64.Interop.TLPM(resource(resource_index,:),logical(ID_Query),logical(Reset_Device));
-                    fprintf('Successfully connect the device:\r\t\t%s\r',resource(resource_index,:));
-                    obj_copy.resourceNameConnected=resource(resource_index,:);
-                    obj_copy.isConnected=true;
-                    obj_copy.modelName=obj.modelName{resource_index};
-                    obj_copy.serialNumber=obj.serialNumber(resource_index,:);
-                    obj_copy.Manufacturer=obj_copy.Manufacturer(resource_index,:);
-                    obj.DeviceAvailable(resource_index)=0;
-                    obj.isConnected=false;
-                catch
-                    error('Failed to connect the device.');
+                    resource = obj.deviceList(resource_index).resourceName;
+                    obj.deviceNET=Thorlabs.TLPM_64.Interop.TLPM(resource,logical(ID_Query),logical(Reset_Device));
+                    fprintf('Successfully connected to:\r\t\t%s\r',resource);
+                    obj.resourceNameConnected=resource(resource_index,:);
+                    obj.isConnected=resource_index;
+                    obj.deviceList(resource_index).DeviceAvailable=0;
+                catch ME
+                    error('Failed to connect the device:\n%s', ME.message);
                 end
             else
                 if obj.isConnected==1
                     warning('Device is connected.');
                 end
-                if obj.DeviceAvailable(resource_index)==0
+                if obj.deviceList(resource_index).DeviceAvailable==0
                     warning('Device is not available.');
                 end
-                obj_copy=[];
-            end
-        end
-
-        function obj_copy=connectForce(obj,resource,resource_index,ID_Query,Reset_Device)
-            %CONNECT Force connect to the specified resource regradless of it status.
-            %   Usage: obj.connectForce(resource);
-            %   By default, it will connect to the first resource on the
-            %   list [resource_index=1] with ID query [ID_Query=1] and
-            %   reset [Reset_Device=1] regradless of it status (Availability);
-            %   Use
-            %   obj.connectForce(resource,ID_Query,Reset_Device,resource_index)
-            %   to modify the default values.
-            arguments
-                obj
-                resource
-                resource_index (1,1) {mustBeNumeric} = 1 % (default) First resource
-                ID_Query (1,1) {mustBeNumeric} = 1 % (default) Query the ID
-                Reset_Device (1,1) {mustBeNumeric} = 1 % (default) Reset
-            end
-            %obj.listdevices; %% TODO -- remove
-            try
-                obj_copy=copy(obj);
-                % The core method to create the power meter instance
-                warning('[Force Connection. The actual device may not be connected]\n');
-                obj_copy.deviceNET=Thorlabs.TLPM_64.Interop.TLPM(resource(resource_index,:),logical(ID_Query),logical(Reset_Device));
-                fprintf('Successfully connect the device:\r\t\t%s\r',resource(resource_index,:));
-                obj_copy.resourceNameConnected=resource(resource_index,:);
-                obj_copy.isConnected=true;
-                obj_copy.modelName=obj.modelName{resource_index};
-                obj_copy.serialNumber=obj.serialNumber(resource_index,:);
-                obj_copy.Manufacturer=obj_copy.Manufacturer(resource_index,:);
-                obj.DeviceAvailable(resource_index)=0;
-                obj.isConnected=false;
-            catch
-                error('Failed to connect the device.');
             end
         end
 
@@ -282,7 +237,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %DISCONNECT Disconnect the specified resource.
             %   Usage: obj.disconnect;
             %   Disconnect the specified resource.
-            if obj.isConnected
+            if obj.isConnected && ~isempty(obj.deviceNET)
                 fprintf('\tDisconnecting ... %s\r',obj.resourceNameConnected);
                 try
                     obj.deviceNET.Dispose();  %Disconnect the device
@@ -301,6 +256,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.setAverageTime(AverageTime);
             %   Set the sensor average time. This method will check the input
             %   and force it to a vaild value if it is out of the range.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             [~,AverageTime_MIN]=obj.deviceNET.getAvgTime(1);
             [~,AverageTime_MAX]=obj.deviceNET.getAvgTime(2);
             if (AverageTime_MIN<=AverageTime && AverageTime<=AverageTime_MAX)
@@ -324,6 +284,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %SETTIMEOUT Set the power meter timeout value.
             %   Usage: obj.setTimeout(Timeout);
             %   Set the sensor timeout value.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             obj.deviceNET.setTimeoutValue(Timeout);
             fprintf('\tSet Timeout Value to %.4fms\r',Timeout);
         end
@@ -333,6 +298,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.setWaveLength(wavelength);
             %   Set the sensor wavelength. This method will check the input
             %   and force it to a vaild value if it is out of the range.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             [~,wavelength_MIN]=obj.deviceNET.getWavelength(1);
             [~,wavelength_MAX]=obj.deviceNET.getWavelength(2);
             if (wavelength_MIN<=wavelength && wavelength<=wavelength_MAX)
@@ -361,6 +331,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.setPowerRange(range);
             %   Set the sensor power range. This method will check the input
             %   and force it to a vaild value if it is out of the range.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             [~,range_MIN]=obj.deviceNET.getPowerRange(1);
             [~,range_MAX]=obj.deviceNET.getPowerRange(2);
             if (range_MIN<=range && range<=range_MAX)
@@ -385,6 +360,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.setDispBrightness(Brightness);
             %   Set the display brightness. This method will check the input
             %   and force it to a vaild value if it is out of the range.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             if (0.0<=Brightness && Brightness<=1.0)
                 obj.deviceNET.setDispBrightness(Brightness);
             else
@@ -406,6 +386,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %SETATTENUATION Set the attenuation.
             %   Usage: obj.setAttenuation(Attenuation);
             %   Set the attenuation.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             if any(strcmp(obj.modelName,{'PM100A', 'PM100D', 'PM100USB', 'PM200', 'PM400'}))
                 [~,Attenuation_MIN]=obj.deviceNET.getAttenuation(1);
                 [~,Attenuation_MAX]=obj.deviceNET.getAttenuation(2);
@@ -434,6 +419,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.sensorInfo;
             %   Read the information of sensor connected and store it in
             %   the properties of the object.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             for ii=1:3
                 descr{ii}=System.Text.StringBuilder;
                 descr{ii}.Capacity=1024;
@@ -543,6 +533,10 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %    in can be found in the meterPowerUnit property.
             %
 
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             [~,powerReading]=obj.deviceNET.measPower;
             obj.meterPowerReading = powerReading;
             [~,meterPowerUnit_]=obj.deviceNET.getPowerUnit;
@@ -567,6 +561,10 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Only for PM100D, PM100A, PM100USB, PM160T, PM200, PM400 with certain
             %   sensors.
 
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             if any(strcmp(obj.modelName,{'PM100D', 'PM100A', 'PM100USB', 'PM160T', 'PM200', 'PM400'}))
                 try
                     [~,obj.meterVoltageReading]=obj.deviceNET.measVoltage;
@@ -586,6 +584,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %DARKADJUST (PM400 Only) Initiate the Zero value measurement.
             %   Usage: obj.darkAdjust;
             %   Start the measurement of Zero value.
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             if any(strcmp(obj.modelName,'PM400'))
                 obj.deviceNET.startDarkAdjust;
                 [~,DarkState]=obj.deviceNET.getDarkAdjustState;
@@ -602,6 +605,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: [DarkOffset_Voltage,DarkOffset_Voltage_Unit]=obj.getDarkOffset;
             %   Retrive the Zero value from power meter and store it in the
             %   properties of the object
+
+            if ~obj.isDeviceNetConnected
+                return
+            end
+
             if any(strcmp(obj.modelName,'PM400'))
                 [~,DarkOffset_Voltage]=obj.deviceNET.getDarkOffset;
                 DarkOffset_Voltage_Unit='V';
@@ -646,11 +654,28 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
         end %loaddlls
 
+        function isConnected = isDeviceNetConnected(obj)
+            if isempty(obj.deviceNET)
+                fprintf('Device seems not to be connected: deviceNET property is empty\n')
+                isConnected = false;
+            else
+                isConnected = true;
+            end
+        end
 
-        function [resourceName,modelName,serialNumber,Manufacturer,DeviceAvailable]=listdevices(obj)  % Read a list of resource names
+        function deviceList=listdevices(obj)  % Read a list of resource names
             %LISTDEVICES List available resources.
             %   Usage: obj.listdevices;
-            %   Retrive all the available devices and return it back.
+            %   Retrive all the available devices and return as a structure:
+            %
+            %   resourceName          -- USB resource name
+            %   modelName             -- Power meter model name
+            %   serialNumber          -- Power meter serial number
+            %   Manufacturer          -- Power meter manufacturer
+            %   DeviceAvailable       -- Power meter avaliablity
+            %
+            % The structure is also copied to the deviceList property
+
             fprintf('Looking for devices...\n')
             findResource=Thorlabs.TLPM_64.Interop.TLPM(System.IntPtr);  % Build device list
             [~,count]=findResource.findRsrc; % Get device list
@@ -661,27 +686,21 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
 
             if count>0
+                n=1;
                 for ii=0:count-1
                     findResource.getRsrcName(ii,descr{1});
                     [~,Device_Available]=findResource.getRsrcInfo(ii, descr{2}, descr{3}, descr{4});
-                    resourceNameArray(ii+1,:)=char(descr{1}.ToString);
-                    modelNameArray{ii+1}=char(descr{2}.ToString);
-                    serialNumberArray(ii+1,:)=char(descr{3}.ToString);
-                    ManufacturerArray(ii+1,:)=char(descr{4}.ToString);
-                    DeviceAvailableArray(ii+1,:)=Device_Available;
+                    deviceList(n).resourceName=char(descr{1}.ToString);
+                    deviceList(n).modelName=char(descr{2}.ToString);
+                    deviceList(n).serialNumber=char(descr{3}.ToString);
+                    deviceList(n).Manufacturer=char(descr{4}.ToString);
+                    deviceList(n).DeviceAvailable=Device_Available;
+                    n=n+1;
                 end
-                resourceName=resourceNameArray;
-                modelName=modelNameArray;
-                serialNumber=serialNumberArray;
-                Manufacturer=ManufacturerArray;
-                DeviceAvailable=DeviceAvailableArray;
             else
-                resourceName=[];
-                modelName=[];
-                serialNumber=[];
-                Manufacturer=[];
-                DeviceAvailable=[];
+                deviceList = [];
             end
+            obj.deviceList=deviceList;
             findResource.Dispose();
         end
 

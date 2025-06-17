@@ -48,27 +48,20 @@ function varargout = power(varargin)
 
     %%
     % Connect to power meter and set wavelength. Bail out if we can't connect to it.
-    meterlist = mpqc.interfaces.ThorlabsPowerMeter;
-    if isempty(meterlist.modelName)
-        return
-    end
-
-
-    % Looking for the connected devices is slow so we cache it if possible.
-
 
     % Get the list of connected devices and cache in base workspace
     W = evalin('base','whos');
     if ismember('PowerMeterDevices',{W.name});
         fprintf('Reusing list of previously connected power meters\n')
         DeviceDescription = evalin('base', 'PowerMeterDevices');
+        powermeter = mpqc.interfaces.ThorlabsPowerMeter(DeviceDescription);
     else
-        fprintf('Looking for connected power meters\n')
-        DeviceDescription=meterlist.listdevices; % List available device(s)
+        powermeter = mpqc.interfaces.ThorlabsPowerMeter;
+        DeviceDescription = powermeter.deviceList; % cache
         assignin('base','PowerMeterDevices',DeviceDescription);
     end
 
-    powermeter=meterlist.connect(DeviceDescription,1); % (sic, yes this is horrible see ThorlabsPowerMeter)
+    powermeter.connect
     powermeter.setWaveLength(laser_wavelength)
 
 
@@ -77,6 +70,7 @@ function varargout = power(varargin)
     API = sibridge.silinker;
 
     if API.linkSucceeded == false
+        delete(powermeter)
         return
     end
 
