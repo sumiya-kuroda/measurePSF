@@ -256,26 +256,33 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             %   Usage: obj.setAverageTime(AverageTime);
             %   Set the sensor average time. This method will check the input
             %   and force it to a vaild value if it is out of the range.
+            %
+            % NOTE: setting this to over about 0.5 seems to cause VISA errors and 
+            %       the device has to be reset. 
 
             if ~obj.isDeviceNetConnected
                 return
+            end
+
+            if AverageTime>0.5
+                warning('Setting averaging time to a value over 0.5s; this might cause VISA errors')
             end
 
             [~,AverageTime_MIN]=obj.deviceNET.getAvgTime(1);
             [~,AverageTime_MAX]=obj.deviceNET.getAvgTime(2);
             if (AverageTime_MIN<=AverageTime && AverageTime<=AverageTime_MAX)
                 obj.deviceNET.setAvgTime(AverageTime);
-                fprintf('\tSet Average Time to %.4fs\r',AverageTime);
+                fprintf('\tSet integration time to %.3f s\r',AverageTime);
             else
                 if AverageTime_MIN>AverageTime
                     warning('Exceed minimum average time! Force to the minimum.');
                     obj.deviceNET.setAvgTime(AverageTime_MIN);
-                    fprintf('\tSet Average Time to %.4fs\r',AverageTime_MIN);
+                    fprintf('\tSet integration time to %.3f s\r',AverageTime_MIN);
                 end
                 if AverageTime>AverageTime_MAX
                     warning('Exceed maximum average time! Force to the maximum.');
                     obj.deviceNET.setAvgTime(AverageTime_MAX);
-                    fprintf('\tSet Average Time to %.4fs\r',AverageTime_MAX);
+                    fprintf('\tSet integration time to %.3f s\r',AverageTime_MAX);
                 end
             end
         end
