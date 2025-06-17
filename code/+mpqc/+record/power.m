@@ -100,11 +100,8 @@ function varargout = power(varargin)
         pause(0.1); % pause for 0.1 seconds
 
         for jj = 1:sampleReps
-            % observedPower(ii,jj) = powermeter.updateReading(0.1);
-            powermeter.updateReading(0.1);
-            observedPower(ii,jj) = powermeter.meterPowerReading *1000;
-
-            % pause(0.1)
+            % Read power in W. Convert to mW and store.
+            observedPower(ii,jj) = powermeter.readPower *1000;
         end
 
         % the power scanimage thinks it is at each percentage laser power

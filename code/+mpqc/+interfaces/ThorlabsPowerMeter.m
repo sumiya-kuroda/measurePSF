@@ -1,7 +1,7 @@
 classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     % ThorlabsPowerMeter Matlab class to control Thorlabs power meters
     %
-    %   Interface class for ThorLabs power meters. This is a 'wrapper' to control 
+    %   Interface class for ThorLabs power meters. This is a 'wrapper' to control
     %   Thorlabs devices via the Thorlabs .NET DLLs.
     %
     %   User Instructions:
@@ -50,19 +50,16 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %
     %   Setting other values:
     %   test_meter.setAverageTime(0.01);                            % Set average time for the measurement
-    %   test_meter.setTimeout(1000);                                % Set timeout value 
+    %   test_meter.setTimeout(1000);                                % Set timeout value
     %
     %   PMT400 only:
     %   test_meter.darkAdjust;
     %   test_meter.getDarkOffset;
     %
-    %   Update the power reading(with interal period of 0.5s):
-    %   for i=1:1:100   
-    %       test_meter.updateReading(0.5);                          
-    %       fprintf('%.10f%c\r',test_meter.meterPowerReading,test_meter.meterPowerUnit);
-    %   end
-    %   test_meter.updateReading_V(0.5);                            % To demonstrate that only certain sensors can use this function
-    %                                                               % A warning message is expected here for most of the models
+    %   Reading power:
+    %   test_meter.readPower
+    %   test_meter.readVoltage
+    %
     %
     %   Disconnect and release:
     %   test_meter.disconnect
@@ -81,7 +78,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %           TLPM__32 5.1.3754.327
     %       Matlab
     %           2020b
-    %   
+    %
     %   Test pass:
     %       Optical Power Monitor
     %           Application 4.0.4100.700
@@ -98,7 +95,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
     %   3.10 ----- 01 SEP 2022 ----- Test the script on latest TLPM driver and MATLAB. Some bugs are corrected as well
     %   3.11 ----- 16 JUN 2025 ----- Fail gracefully if DLL not installed. Minor tidy to docs. [RAAC]
 
-    
+
     properties (Hidden)
         % Path to .net *.dll files (edit as appropriate)
         % pwd --- Current working directory of this file
@@ -107,26 +104,26 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
         % Comment out this line and uncomment next line to use customized dll file directory
         % METERPATHDEFAULT=[pwd '\Thorlabs_DotNet_dll\'];
         METERPATHDEFAULT='C:\Program Files (x86)\Microsoft.NET\Primary Interop Assemblies\';
-        
+
         %   *.dll files to be loaded
         %
         % NOTE
-        %   No significant difference was noticed between 
+        %   No significant difference was noticed between
         %   "Thorlabs.TLPMX_64.Interop.dll" and "Thorlabs.TLPM_64.Interop.dll"
-        %   But if you are going to use "Thorlabs.TLPMX_64.Interop.dll", please change 
+        %   But if you are going to use "Thorlabs.TLPMX_64.Interop.dll", please change
         %
         %         TLPMDLL='Thorlabs.TLPM_64.Interop.dll';
         %         TLPMCLASSNAME='Thorlabs.TLPM_64.Interop.TLPM';
-        %     
+        %
         %     into
-        %         
+        %
         %         TLPMDLL='Thorlabs.TLPMX_64.Interop.dll';
         %         TLPMCLASSNAME='Thorlabs.TLPM_64.Interop.TLPMX';
         %
         TLPMDLL='Thorlabs.TLPM_64.Interop.dll';
         TLPMCLASSNAME='Thorlabs.TLPM_64.Interop.TLPM';
     end
-    
+
     properties
         % These properties are within Matlab wrapper
         isConnected=false;          % Flag set if device connected
@@ -145,17 +142,17 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
         sensorFlags;                % Sensor flag
         DarkOffset_Voltage;         % (PM400 ONLY) Dark offset voltage
         DarkOffset_Voltage_Unit;    % (PM400 ONLY) Dark offset voltage unit
-        meterPowerReading;          % Power reading
+        meterPowerReading;          % Last power reading
         meterPowerUnit;             % Power reading unit
-        meterVoltageReading;        % Voltage reading
+        meterVoltageReading;        % Last voltage reading
         meterVoltageUnit;           % Voltage reading unit
     end
-    
+
     properties (Hidden)
         % These are properties within the .NET environment.
         deviceNET;                  % Device object within .NET
     end
-    
+
     methods
         function obj = ThorlabsPowerMeter()
             %ThorlabsPowerMeter Construct an instance of this class
@@ -184,7 +181,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 fprintf('Use <Your_Meter_List>.connect(resourceName,index) to connect multiple devices.\r\r');
             end
         end
-        
+
         function delete(obj)
             %DELETE Deconstruct the instance of this class
             %   Usage: obj.delete;
@@ -199,9 +196,9 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             else % Cannot disconnect because device is not connected
                 %fprintf('Device Released Properly.\r\r');
             end
-            
+
         end
-        
+
         function obj_copy=connect(obj,resource,resource_index,ID_Query,Reset_Device)
             %CONNECT Connect to the specified resource.
             %   Usage: obj.connect(resource);
@@ -245,7 +242,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 obj_copy=[];
             end
         end
-        
+
         function obj_copy=connectForce(obj,resource,resource_index,ID_Query,Reset_Device)
             %CONNECT Force connect to the specified resource regradless of it status.
             %   Usage: obj.connectForce(resource);
@@ -280,7 +277,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 error('Failed to connect the device.');
             end
         end
-        
+
         function disconnect(obj)
             %DISCONNECT Disconnect the specified resource.
             %   Usage: obj.disconnect;
@@ -298,7 +295,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 warning('Device not connected.')
             end
         end
-        
+
         function setAverageTime(obj,AverageTime)
             %SETAVERAGETIME Set the sensor average time.
             %   Usage: obj.setAverageTime(AverageTime);
@@ -322,7 +319,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 end
             end
         end
-        
+
         function setTimeout(obj,Timeout)
             %SETTIMEOUT Set the power meter timeout value.
             %   Usage: obj.setTimeout(Timeout);
@@ -330,7 +327,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             obj.deviceNET.setTimeoutValue(Timeout);
             fprintf('\tSet Timeout Value to %.4fms\r',Timeout);
         end
-        
+
         function setWaveLength(obj,wavelength)
             %SETWAVELENGTH Set the sensor wavelength.
             %   Usage: obj.setWaveLength(wavelength);
@@ -354,11 +351,11 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 end
             end
         end
-        
+
         function setPowerAutoRange(obj,enable)
             obj.deviceNET.getPowerRange(enable);
         end
-        
+
         function setPowerRange(obj,range)
             %SETPOWERRANGE Set the sensor power range.
             %   Usage: obj.setPowerRange(range);
@@ -382,7 +379,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 end
             end
         end
-        
+
         function setDispBrightness(obj,Brightness)
             %SETDISPBRIGHTNESS Set the display brightness.
             %   Usage: obj.setDispBrightness(Brightness);
@@ -404,7 +401,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
             fprintf('Set Display Brightness to %d%%\r',Brightness*100);
         end
-        
+
         function setAttenuation(obj,Attenuation)
             %SETATTENUATION Set the attenuation.
             %   Usage: obj.setAttenuation(Attenuation);
@@ -431,7 +428,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 warning('This command is not supported on %s.',obj.modelName);
             end
         end
-        
+
         function sensorInfo=sensorInfo(obj)
             %SENSORINFO Retrive the sensor information.
             %   Usage: obj.sensorInfo;
@@ -498,7 +495,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             tag=rem(sensor_flag,16);
             switch tag
                 case 0x0000
-                    
+
                 case 0x0001
                     obj.sensorFlags=[obj.sensorFlags,'Power sensor '];
                 case 0x0002
@@ -510,7 +507,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             tag=rem(sensor_flag,256);
             switch tag
                 case 0x0000
-                    
+
                 case 0x0010
                     obj.sensorFlags=[obj.sensorFlags,'Responsivity settable '];
                 case 0x0020
@@ -524,7 +521,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             tag=rem(sensor_flag,256*16);
             switch tag
                 case 0x0000
-                    
+
                 case 0x0100
                     obj.sensorFlags=[obj.sensorFlags,'With Temperature sensor '];
                 otherwise
@@ -534,14 +531,20 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             sensorInfo.SubType=obj.sensorSubType;
             sensorInfo.Flags=obj.sensorFlags;
         end
-        
-        function updateReading(obj,period)
-            %UPDATEREADING Update the reading from power meter.
-            %   Usage: obj.updateReading;
-            %   Retrive the reading from power meter and store it in the
-            %   properties of the object
-            [~,obj.meterPowerReading]=obj.deviceNET.measPower;
-            pause(period)
+
+        function powerReading = readPower(obj)
+            % readPower - Return power incident on sensor in W or dB
+            %
+            %   Usage: P = obj.readPower;
+            %
+            %   Details:
+            %    Return power incident on sensor and also store the last read power
+            %    value in the "meterPowerReading" property. The unit the meter reads
+            %    in can be found in the meterPowerUnit property.
+            %
+
+            [~,powerReading]=obj.deviceNET.measPower;
+            obj.meterPowerReading = powerReading;
             [~,meterPowerUnit_]=obj.deviceNET.getPowerUnit;
             switch meterPowerUnit_
                 case 0
@@ -552,37 +555,33 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                     warning('Unknown');
             end
         end
-        
-        function updateReading_V(obj,period)
-            %UPDATEREADING_V Update the reading from power meter with Voltage reading.
-            %   Usage: obj.updateReading;
-            %   Retrive the reading from power meter and store it in the
-            %   properties of the object
-            %   Only for PM100D, PM100A, PM100USB, PM160T, PM200, PM400
-            %   ANd it only support certain sensors
-            [~,obj.meterPowerReading]=obj.deviceNET.measPower;
-            pause(period)
-            [~,meterPowerUnit_]=obj.deviceNET.getPowerUnit;
-            switch meterPowerUnit_
-                case 0
-                    obj.meterPowerUnit='W';
-                case 1
-                    obj.meterPowerUnit='dBm';
-                otherwise
-                    warning('Unknown');
-            end
+
+        function voltageReading = readVoltage(obj)
+            % readVoltage - return the voltage value generated by the meter
+            %
+            %   obj.readVoltage;
+            %
+            %  Details:
+            %   Return the voltage value associated with the power reading. Also stores
+            %   the last read value in the property "meterVoltageReading". Works only on:
+            %   Only for PM100D, PM100A, PM100USB, PM160T, PM200, PM400 with certain
+            %   sensors.
+
             if any(strcmp(obj.modelName,{'PM100D', 'PM100A', 'PM100USB', 'PM160T', 'PM200', 'PM400'}))
                 try
-                    [~,obj.meterVoltageReading]=obj.deviceNET.measVoltage; 
+                    [~,obj.meterVoltageReading]=obj.deviceNET.measVoltage;
+                    voltageReading = obj.meterVoltageReading;
                     obj.meterVoltageUnit='V';
                 catch
                     warning('Wrong sensor type for this operation');
                 end
+            else
+                voltageReading = [];
             end
         end
-        
-        
-        
+
+
+
         function darkAdjust(obj)
             %DARKADJUST (PM400 Only) Initiate the Zero value measurement.
             %   Usage: obj.darkAdjust;
@@ -597,7 +596,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
                 warning('This command is not supported on %s.',obj.modelName);
             end
         end
-        
+
         function [DarkOffset_Voltage,DarkOffset_Voltage_Unit]=getDarkOffset(obj)
             %GETDARKOFFSET (PM400 Only) Read the Zero value from powermeter.
             %   Usage: [DarkOffset_Voltage,DarkOffset_Voltage_Unit]=obj.getDarkOffset;
@@ -616,7 +615,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
         function success = loaddlls(obj) % Load DLLs
             %LOADDLLS Load needed dll libraries.
             %   Usage: success = obj.loaddlls;
-            % 
+            %
             %   returns true if successfully loads DLL. False otherwise.
 
             % For the DLLs to actually work we need to also add to the Windows path the
@@ -647,7 +646,7 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             end
         end %loaddlls
 
-        
+
         function [resourceName,modelName,serialNumber,Manufacturer,DeviceAvailable]=listdevices(obj)  % Read a list of resource names
             %LISTDEVICES List available resources.
             %   Usage: obj.listdevices;
