@@ -43,7 +43,7 @@ function varargout = power(varargin)
     numSteps = 21;
 
     % The number of times to measure power at each percent power value
-    sampleReps = 1;
+    sampleReps = 4;
 
 
     %%
@@ -98,7 +98,6 @@ function varargout = power(varargin)
     SIpower = zeros(1,numSteps);
     powerSeriesPercent = linspace(0,100,numSteps);
     powerSeriesPercentMatrix = repmat(powerSeriesPercent',1,sampleReps);
-    powerSeriesDec = linspace(0,1,numSteps);
 
     H_observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
 
@@ -108,14 +107,22 @@ function varargout = power(varargin)
     hold off
 
     legend([H_observed H_meanVal H_SI_Power], ...
-        'Raw values', 'Mean Observed Power', 'SI Power')
+        'Raw values', 'Mean Observed Power', 'SI Power', ...
+        'Location', 'NorthWest')
     title(['Wavelength = ',num2str(laser_wavelength), 'nm'])
     ylabel('Power (mW)')
     xlabel('Percent power')
 
+    % Set Y axis limits to reasonable values from the start
+    ylim([0, API.powerPercent2Watt(1)*1200])
+    xlim([0,105])
+    box on
+    grid on
+
+
     % Record and plot graph as we go
     for ii = 1:numSteps
-        API.setLaserPower(powerSeriesDec(ii));
+        API.setLaserPower(powerSeriesPercent(ii)/100);
         pause(0.1); % pause for 0.1 seconds
 
         for jj = 1:sampleReps
@@ -124,11 +131,11 @@ function varargout = power(varargin)
         end
 
         % The power scanimage thinks it is at each percentage laser power
-        SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
+        SIpower(ii) = API.powerPercent2Watt(powerSeriesPercent(ii)/100);
 
         H_observed.YData = observedPower(:);
         H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
-        H_SI_Power.YData(ii) = SIpower(1,ii)*1000;
+        H_SI_Power.YData(ii) = SIpower(ii)*1000;
         drawnow
     end
 
