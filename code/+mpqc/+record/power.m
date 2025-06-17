@@ -53,8 +53,22 @@ function varargout = power(varargin)
         return
     end
 
-    DeviceDescription=meterlist.listdevices; % List available device(s)
-    powermeter=meterlist.connect(DeviceDescription); % (sic, yes this is horrible see ThorlabsPowerMeter)
+
+    % Looking for the connected devices is slow so we cache it if possible.
+
+
+    % Get the list of connected devices and cache in base workspace
+    W = evalin('base','whos');
+    if ismember('PowerMeterDevices',{W.name});
+        fprintf('Reusing list of previously connected power meters\n')
+        DeviceDescription = evalin('base', 'PowerMeterDevices');
+    else
+        fprintf('Looking for connected power meters\n')
+        DeviceDescription=meterlist.listdevices; % List available device(s)
+        assignin('base','PowerMeterDevices',DeviceDescription);
+    end
+
+    powermeter=meterlist.connect(DeviceDescription,1); % (sic, yes this is horrible see ThorlabsPowerMeter)
     powermeter.setWaveLength(laser_wavelength)
 
 
