@@ -4,9 +4,9 @@ function varargout = power(varargin)
     % function mpqc.record.power('wavelength', value)
     %
     % Purpose
-    % Uses a powermeter in the sample plane to measure the true laser power at the 
-    % objective at different percent power levels in ScanImage. Used to check that 
-    % the power calibration is accurate. The function also saves these predicted 
+    % Uses a powermeter in the sample plane to measure the true laser power at the
+    % objective at different percent power levels in ScanImage. Used to check that
+    % the power calibration is accurate. The function also saves these predicted
     % power values.
     %
     %
@@ -30,27 +30,33 @@ function varargout = power(varargin)
     % Isabell Whiteley, SWC AMF, initial commit 2025
 
 
-
+    %%
     % Parse inputs and ensure user has supplied the current wavelength
     out =  parseInputVariable(varargin{:});
     laser_wavelength=out.wavelength;
 
 
-    % Connect to Powermeter and set wavelength. Bail out if we can't connect to it
+    %% Important variables
+    % The following are important and could in future become input arguments.
+
+    % The number of steps over which the sample the power fraction range.
+    numSteps = 21;
+
+    % The number of times to measure power at each percent power value
+    sampleReps = 1;
+
+
+    %%
+    % Connect to power meter and set wavelength. Bail out if we can't connect to it.
     meterlist = mpqc.interfaces.ThorlabsPowerMeter;
     if isempty(meterlist.modelName)
         return
     end
-    DeviceDescription=meterlist.listdevices;                % List available device(s)
-    powermeter=meterlist.connect(DeviceDescription);  
-    powermeter.setWaveLength(laser_wavelength) % sends new wavelength to powermeter
 
+    DeviceDescription=meterlist.listdevices; % List available device(s)
+    powermeter=meterlist.connect(DeviceDescription); % (sic, yes this is horrible see ThorlabsPowerMeter)
+    powermeter.setWaveLength(laser_wavelength)
 
-    % The number of steps over which the sample the power fraction range.
-    numSteps = 21; % to include the 0% step
-
-    % The number of times to measure power at each percent power value
-    sampleReps = 1;
 
 
     % Connect to ScanImage using the linker class
@@ -63,38 +69,43 @@ function varargout = power(varargin)
     %Record the state of all ScanImage settings we will change so we can change them back
     settings = mpqc.tools.recordScanImageSettings(API);
 
-    API.turnOffAllPMTs
 
-    % Tell SI to point
+    API.turnOffAllPMTs
     API.pointBeam
 
     % control the laser power in percentage
     API.setLaserPower(.01) ; % set laser power to 1%
 
-    %TODO: only works on one laser systems
+
+    %TODO: only works on one laser systems? <------
 
 
-    %% Measure power
+
+
+    %% Build a figure to display the data as we go
+    powerPlot = figure;
+
+    % Pre-allocate
     observedPower = zeros(numSteps,sampleReps)*nan;
     SIpower = zeros(1,numSteps);
     powerSeriesPercent = linspace(0,100,numSteps);
     powerSeriesPercentMatrix = repmat(powerSeriesPercent',1,sampleReps);
     powerSeriesDec = linspace(0,1,numSteps);
 
+    H_observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
 
-    %% Build a figure to display the data as we go
-    powerPlot = figure;
-    observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
     hold on
-    meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
-    est = plot(powerSeriesPercent,SIpower*1000, '-b');
+    H_meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
+    H_SI_Power = plot(powerSeriesPercent,SIpower*1000, '-b');
     hold off
 
-    legend([observed meanVal est],'Raw values', 'Mean Observed Power', 'SI Power')
+    legend([H_observed H_meanVal H_SI_Power], ...
+        'Raw values', 'Mean Observed Power', 'SI Power')
     title(['Wavelength = ',num2str(laser_wavelength), 'nm'])
     ylabel('Power (mW)')
     xlabel('Percent power')
 
+    % Record and plot graph as we go
     for ii = 1:numSteps
         API.setLaserPower(powerSeriesDec(ii));
         pause(0.1); % pause for 0.1 seconds
@@ -104,21 +115,23 @@ function varargout = power(varargin)
             observedPower(ii,jj) = powermeter.readPower *1000;
         end
 
-        % the power scanimage thinks it is at each percentage laser power
+        % The power scanimage thinks it is at each percentage laser power
         SIpower(1,ii) = API.powerPercent2Watt(powerSeriesDec(ii));
 
-        observed.YData = observedPower(:);
-        meanVal.YData(ii) = mean(observedPower(ii,:),2);
-        est.YData(ii) = SIpower(1,ii)*1000;
+        H_observed.YData = observedPower(:);
+        H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
+        H_SI_Power.YData(ii) = SIpower(1,ii)*1000;
         drawnow
     end
 
+
+    % Disconnect from power meter
     delete(powermeter)
 
     API.parkBeam
 
 
-    % Reapply original scanimage settings
+    % Reapply original ScanImage settings
     mpqc.tools.reapplyScanImageSettings(API,settings);
 
 
