@@ -253,16 +253,21 @@ classdef silinker < handle
         end % parkBeam
 
 
-        function setLaserPower(obj,powerFraction)
+        function setLaserPower(obj,powerFraction,beamIndex)
             % Set the laser power as a fraction
             %
             % Inputs
             % powerFraction - the power fraction to which the laser power should be set
+            % beamIndex - 1 by default. Defines the beam to change.
             %
             % Outputs
             % none
 
-           obj.hSI.hBeams.hBeams{1}.setPowerFraction(powerFraction)
+            if nargin<3
+                beamIndex = 1;
+            end
+
+            obj.hSI.hBeams.hBeams{beamIndex}.setPowerFraction(powerFraction)
         end % setLaserPower
 
 
@@ -283,6 +288,34 @@ classdef silinker < handle
             powerIn_mW = obj.hSI.hBeams.hBeams{1}.convertPowerFraction2PowerWatt(powerFraction);
         end % powerPercent2Watt
 
+
+        function setBeamMinMaxPowerInW(obj,minMaxW,beamIndex)
+            % Set the min and max power of the beam 
+            %
+            % Purpose
+            % The Machine Data File of SI via the Settings panel determines the maximum and
+            % minimum power. The user can change this by editing the settings box manually.
+            % This method does the same thing for a defined beam.
+            %
+            % Inputs
+            % minMaxW - Vector of length 2 that defines [minW,maxW] of the laser
+            % beamIndex - 1 by default. Defines the beam to change.
+            %
+            % Outputs
+            % none
+
+
+            if nargin<3
+                beamIndex = 1;
+            end
+
+            if isempty(minMaxW) || ~isvector(minMaxW) || length(minMaxW)~=2
+                return
+            end
+
+            obj.hSI.hBeams.hBeams{beamIndex}.powerFraction2PowerWattLut(:,2) = minMaxW;
+
+        end % setBeamMinMaxPowerInW
 
         function disableChannelOffsetSubtraction(obj)
             % Disable the offset subtraction for the PMT inputs
