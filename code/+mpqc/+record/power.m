@@ -1,19 +1,79 @@
 classdef power < handle
 
-    % Measures the power at the objective at a range of percent power values in SI
+    % Measures the power at the objective at a range of percent power values in ScanImage
     %
     % Purpose
-    % Uses a power meter in the sample plane to measure the true laser power at the
-    % objective at different percent power levels in ScanImage. Used to check that
-    % the power calibration is accurate. The function also saves these predicted
-    % power values.
+    % Uses a ThorLabs power meter in the sample plane to measure the true laser power at
+    % the at different percent power levels in ScanImage. Plots compare the measured power
+    % to that predicated by ScanImage. A calibration button applies the measured power
+    % settings to ScanImage. Other buttons return the power value data to the base
+    % workspace or saves the data as a .mat file.
     %
-    % Usage notes
-    % Change wavelength with, for example:
+    %
+    % ** Basic Usage:
+    % P = mpqc.record.power(800); % Starts the GUI, specifying the laser is tuned to 800 nm
+    % P = mpqc.record.power; % Starts the GUI: the user is prompted to enter the wavelength
+    %
+    % NOTE: if you re-tune the wavelength you should either re-start the GUI or set the
+    % the wavelength as follows:
+    % P.laserWavelength = 920
+    %
+    %
+    % ** Using the GUI
+    % Pressing "Measure Power Curve" will initiate the measurement process and display
+    % the results to screen. You can also start the measurement process by running the
+    % the recordPowerCurve method at the command line:
+    %
+    % e.g.
     % P = mpqc.record.power(800);
     % P.recordPowerCurve
-    % P.laserWavelength(920)
-    % P.recordPowerCurve
+    %
+    % The above method name is brought up in the tooltip that appears when you hover over
+    % the "Measure Power Curve" button.
+    %
+    %
+    % ** Changing the recording parameters
+    % To alter the number of points at which the curve is sampled, change the "numSteps"
+    % property at the command line and re-run the measurement. To change the number of
+    % times each power level is sampled, alter the "sampleReps" property.
+    %
+    %
+    % ** Interpreting the results
+    % The left panel shows laser power as a function of percent power in ScanImage. The
+    % blue line represents the predicted power from ScanImage. The points and red line are
+    % the measured data. A linear fit is applied after the data are acquired. If the
+    % microscope is well-calibrated the red fit line will lie on top of the blue line
+    % representing the expected values.
+    %
+    % The the right plot is the difference between the expected and record values as a
+    % function of the recorded values. Structure in this plot, especially a curve at the
+    % high or low end, could be due to modulator non-linearity. Ensure the offset of the
+    % modulator is set correctly and re-run the ScanImage modulator calibration before
+    % re-running the power measurement.
+    %
+    % The data could also be skewed if your sensor is very slow. Change the "settingTime"
+    % property to take into account slower sensors.
+    %
+    %
+    % ** Calibrating ScanImage
+    % If you are happy that the recorded data look good, press the "Calibrate ScanImage"
+    % button and re-run "Measure Power Curve". The expected and measured curves should
+    % correspond closely. You may find that very low percent power values now correspond
+    % to negative power values. This is because of an imperfect offset of some modulators
+    % and arises from their sinusoidal relationship between command voltage and power
+    % output. In most cases these negative values are not a problem as we don't need the
+    % very low end of the scale. If you need to image a precise low power (such as 5 mW)
+    % it is a good idea to measure this before starting and not rely on ScanImage.
+    % If you use only lower power values, you can restrict the maximum command signal and
+    % play with the offset of the modulator to get a pretty good correspondence between
+    % actual and predicted power over your range of interest.
+    %
+    %
+    % ** BakingTray Interface
+    % If you are using the laser control interface from the BakingTray, you can start
+    % BakingTray first and mpqc.record.power will query the current wavelength each time
+    % it makes a recording so you don't have to set this manually.
+    %
     %
     % Requirements
     % You must have installed ThorLabs power meter GUI from:
@@ -30,6 +90,10 @@ classdef power < handle
 
         % The number of times to measure power at each percent power value
         sampleReps = 4;
+
+        % Time between changing the laser power and starting to measure.
+        % This is to take into account settling time of the power sensor head.
+        settlingTime = 0.2;
 
         laserWavelength
 
@@ -84,53 +148,32 @@ classdef power < handle
             % Inputs (optional param/val pairs. If not defined, a CLI prompt appears)
             %  'wavelength' - Excitation wavelength of the laser. Defined in nm.
             %
-            % Outputs (optional)
-            % powerMeasurements - a structure containing the recorded data with fields:
-            %   .observedPower
-            %   .currentTime
-            %   .SIpower_mW
-            %   .laserWavelength
-            %
-            %
-            % Requirements
-            % You must have installed ThorLabs power meter GUI from:
-            % https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=OPM
-            % See mpqc.interfaces.ThorlabsPowerMeter
-            %
-            %
-            % Isabell Whiteley, SWC AMF, initial commit 2025
 
+            %%
+            % Parse inputs and ensure user has supplied the current wavelength
+            out =  parseInputVariable(varargin{:});
 
-                %%
-                % Parse inputs and ensure user has supplied the current wavelength
-                out =  parseInputVariable(varargin{:});
-
-                if ~ismac
-                    % Connect to ScanImage using the linker class
-                    obj.API = sibridge.silinker;
-
-                    if obj.API.linkSucceeded == false
-                        % Bail out if no ScanImage
-                        return
-                    end
-
-
-
-                    % Record the state of all ScanImage settings we will change so we can
-                    % change them back
-                    obj.cachedSettings = mpqc.tools.recordScanImageSettings(obj.API);
-
-
-                    obj.connectToPowerMeter
+            if ~ismac
+                % Connect to ScanImage using the linker class
+                obj.API = sibridge.silinker;
+                if obj.API.linkSucceeded == false
+                    % Bail out if no ScanImage
+                    return
                 end
+                % Record the state of all ScanImage settings we will change so we can
+                % change them back
+                obj.cachedSettings = mpqc.tools.recordScanImageSettings(obj.API);
+                obj.connectToPowerMeter
+            end
 
-                obj.makeFigWindow
-                obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
+            obj.makeFigWindow
+            obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
 
             end % constructor
 
 
             function delete(obj)
+                % Clean up, disconnect from power meter, etc
 
                 % Reapply original ScanImage settings
                 if ~isempty(obj.API) && obj.API.linkSucceeded
@@ -143,6 +186,7 @@ classdef power < handle
                 % Disconnect from power meter
                 delete(obj.powermeter)
 
+                obj.hBT = [];
 
                 delete(obj.hFig)
 
@@ -177,125 +221,6 @@ classdef power < handle
 
 
 
-            function fitRawData(obj)
-                % linear fit of raw data
-
-                if isempty(obj.powerMeasurements)
-                    return
-                end
-
-                xraw = obj.H_observed.XData(:);
-                y = obj.H_observed.YData(:);
-
-                x=[ones(size(xraw)),xraw];
-
-                [b,bint,r,~,out_stats]=regress(y,x);
-
-                X = obj.H_fit.XData;
-                Y = b(1)+ X*b(2);
-
-                obj.H_fit.YData = Y;
-
-                obj.powerMeasurements.fittedMinAndMax = Y;
-            end % fitRawData
-
-
-            function makeFigWindow(obj)
-                % Build the figure window if it is not already there
-
-                % TODO -- it's possible we don't actually need to find the existing window
-                H = findobj('Tag',obj.figureTag);
-
-                if isempty(H)
-                    obj.hFig = figure('Tag',obj.figureTag);
-                    figure(obj.hFig);
-
-
-                    obj.hAxPower = axes('Position', [0.08,0.20,0.40,0.60], ...
-                                'parent', obj.hFig);
-
-                    obj.hAxResid = axes('Position', [0.58,0.20,0.40,0.60], ...
-                                'parent', obj.hFig);
-
-
-                    % A save button is added at the end so the user can optionally save data
-                    obj.hButton_save = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.71, 0.015, 0.15, 0.04], ...
-                                'String', 'Save Data', ...
-                                'ToolTip', 'Save data to Desktop', ...
-                                'Parent', obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.saveData_Callback);
-
-                    obj.hButton_data2base = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.49, 0.015, 0.2, 0.04], ...
-                                'String', 'Data to base workspace', ...
-                                'ToolTip', 'Copy data to base workspace', ...
-                                'Parent', obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.data2base_Callback);
-
-                    obj.hButton_calibrateSI = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.27, 0.015, 0.2, 0.04], ...
-                                'String', 'Calibrate ScanImage', ...
-                                'ToolTip', 'Apply calibration data to ScanImage', ...
-                                'Parent', obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.calibrateSI_Callback);
-
-                    obj.hButton_runPowerMeasure = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.05, 0.015, 0.2, 0.04], ...
-                                'String', 'Measure Power Curve', ...
-                                'ToolTip', 'Measure powerCurve (power.Apply calibration data to ScanImage', ...
-                                'Parent', obj.hFig, ...
-                                'Enable', 'on', ...
-                                'Callback', @obj.recordPowerCurve);
-
-                    % So closing the window triggers the destructor
-                    obj.hFig.CloseRequestFcn = @obj.windowCloseFcn;
-                else
-                    obj.hFig = findobj('Tag',obj.figureTag);
-                end
-            end % makeFigWindow
-
-
-            function resetPlot(obj)
-                % Reset all the plots and wipe all plotted data
-                %
-                % power.resetPlot()
-
-                cla(obj.hAxPower)
-                cla(obj.hAxResid)
-                obj.powerMeasurements = [];
-
-                obj.disableButtons
-
-            end % reset plot
-
-
-            function disableButtons(obj)
-                % disables buttons when no data are available to save
-
-                obj.hButton_save.Enable='off';
-                obj.hButton_data2base.Enable='off';
-                obj.hButton_calibrateSI.Enable='off';
-            end % disableButtons
-
-            function enableButtons(obj)
-                % enables buttons when no data are available to save
-
-                obj.hButton_save.Enable='on';
-                obj.hButton_data2base.Enable='on';
-                obj.hButton_calibrateSI.Enable='on';
-            end % disableButtons
 
         end % main methods
 
@@ -347,7 +272,7 @@ classdef power < handle
                     'Parent', obj.hAxPower);
 
                 % The predicted power from ScanImage
-                obj.H_SI_Power = plot(powerSeriesPercent_mW, SIpower_mW*1000, '-b', ...
+                obj.H_SI_Power = plot(powerSeriesPercent_mW, SIpower_mW*1000, '-b', ...% TODO--why is that x1000?
                     'Parent', obj.hAxPower);
 
                 % A linear fit will go here
@@ -378,7 +303,7 @@ classdef power < handle
                 % Record and plot graph as we go
                 for ii = 1:obj.numSteps
                     obj.API.setLaserPower(powerSeriesPercent_mW(ii)/100);
-                    pause(0.1); % pause for 0.1 seconds
+                    pause(obj.settlingTime);
 
                     for jj = 1:obj.sampleReps
                         % Read power in W. Convert to mW and store.
