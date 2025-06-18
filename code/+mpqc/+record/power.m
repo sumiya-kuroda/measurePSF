@@ -98,7 +98,7 @@ classdef power < handle
         laserWavelength
 
         powerMeasurements %- a structure containing the recorded data with fields:
-        %   .observedPower
+        %   .observedPower_mW
         %   .currentTime
         %   .SIpower_mW
         %   .laserWavelength
@@ -129,6 +129,7 @@ classdef power < handle
 
         API % ScanImage APIs
         powermeter % Power meter class is here
+        hBT % BakingTray added here optionally to set laser power
     end
 
     methods
@@ -153,23 +154,37 @@ classdef power < handle
             % Parse inputs and ensure user has supplied the current wavelength
             out =  parseInputVariable(varargin{:});
 
-            if ~ismac
+
+            if ~ismac % to enable debugging on Macs without hardware
+
                 % Connect to ScanImage using the linker class
                 obj.API = sibridge.silinker;
                 if obj.API.linkSucceeded == false
                     % Bail out if no ScanImage
                     return
                 end
+
                 % Record the state of all ScanImage settings we will change so we can
                 % change them back
                 obj.cachedSettings = mpqc.tools.recordScanImageSettings(obj.API);
+
+                %%
+                % Parse inputs and ensure user has supplied the current wavelength
+                if exist('BakingTray','file')
+                    obj.hBT = BakingTray.getObject(true);
+                    out.wavelength = obj.hBT.laser.readWavelength;
+                else
+                    out = parseInputVariable(varargin{:});
+                end
+
                 obj.connectToPowerMeter
             end
 
             obj.makeFigWindow
             obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
 
-            end % constructor
+
+        end % constructor
 
 
             function delete(obj)
@@ -215,12 +230,130 @@ classdef power < handle
                 end
 
                 obj.powermeter.connect
-                obj.powermeter.setWaveLength(obj.laserWavelength)
 
             end % connectToPowerMeter
 
 
+            function fitRawData(obj)
+                % linear fit of raw data
 
+                if isempty(obj.powerMeasurements)
+                    return
+                end
+
+                xraw = obj.H_observed.XData(:);
+                y = obj.H_observed.YData(:);
+
+                x=[ones(size(xraw)),xraw];
+
+                [b,bint,r,~,out_stats]=regress(y,x);
+
+                X = obj.H_fit.XData;
+                Y = b(1)+ X*b(2);
+
+                obj.H_fit.YData = Y;
+
+                obj.powerMeasurements.fittedMinAndMax = Y;
+            end % fitRawData
+
+
+            function makeFigWindow(obj)
+                % Build the figure window if it is not already there
+
+                % TODO -- it's possible we don't actually need to find the existing window
+                H = findobj('Tag',obj.figureTag);
+
+                if isempty(H)
+                    obj.hFig = figure('Tag',obj.figureTag);
+                    figure(obj.hFig);
+
+
+                    obj.hAxPower = axes('Position', [0.08,0.20,0.40,0.60], ...
+                                'parent', obj.hFig);
+
+                    obj.hAxResid = axes('Position', [0.58,0.20,0.40,0.60], ...
+                                'parent', obj.hFig);
+
+
+                    % A save button is added at the end so the user can optionally save data
+                    obj.hButton_save = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.75, 0.015, 0.15, 0.06], ...
+                                'String', 'Save Data', ...
+                                'ToolTip', sprintf('Save data to Desktop.\n("power.saveData")'), ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.saveData);
+
+                    obj.hButton_data2base = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.49, 0.015, 0.24, 0.06], ...
+                                'String', 'Data to base workspace', ...
+                                'ToolTip', sprintf('Copy data to base workspace.\n("power.data2base")'), ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.data2base);
+
+                    obj.hButton_calibrateSI = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.27, 0.015, 0.21, 0.06], ...
+                                'String', 'Calibrate ScanImage', ...
+                                'ToolTip',  sprintf('Apply calibration data to ScanImage.\n("power.calibrateSI")'), ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.calibrateSI);
+
+                    obj.hButton_runPowerMeasure = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.05, 0.015, 0.21, 0.06], ...
+                                'String', 'Measure Power Curve', ...
+                                'ToolTip', sprintf('Measure powerCurve\n("power.recordPowerCurve")'), ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'on', ...
+                                'Callback', @obj.recordPowerCurve);
+
+                    % So closing the window triggers the destructor
+                    obj.hFig.CloseRequestFcn = @obj.windowCloseFcn;
+                else
+                    obj.hFig = findobj('Tag',obj.figureTag);
+                end
+            end % makeFigWindow
+
+
+            function resetPlot(obj)
+                % Reset all the plots and wipe all plotted data
+                %
+                % power.resetPlot()
+
+                cla(obj.hAxPower)
+                cla(obj.hAxResid)
+                title(sprintf('Wavelength = %d nm', obj.laserWavelength),'parent',obj.hAxPower)
+                obj.powerMeasurements = [];
+
+                obj.disableButtons
+
+            end % reset plot
+
+
+            function disableButtons(obj)
+                % disables buttons when no data are available to save
+
+                obj.hButton_save.Enable='off';
+                obj.hButton_data2base.Enable='off';
+                obj.hButton_calibrateSI.Enable='off';
+            end % disableButtons
+
+            function enableButtons(obj)
+                % enables buttons when no data are available to save
+
+                obj.hButton_save.Enable='on';
+                obj.hButton_data2base.Enable='on';
+                obj.hButton_calibrateSI.Enable='on';
+            end % disableButtons
 
         end % main methods
 
@@ -232,8 +365,13 @@ classdef power < handle
             function set.laserWavelength(obj,val)
                 % Reset the plot if the user changes wavelength. This makes it less
                 % likely the user will acquire data tagged with the wrong wavelength.
-                obj.resetPlot
+                if ~isnumeric(val) || ~isscalar(val)
+                    return
+                end
                 obj.laserWavelength = val;
+                obj.powermeter.setWaveLength(obj.laserWavelength)
+                obj.resetPlot
+
             end
 
         end % getters/setters
@@ -247,52 +385,51 @@ classdef power < handle
                 %
                 % power.recordPowerCurve
 
-
-                obj.resetPlot;
+                if ~isempty(obj.hBT)
+                    obj.laserWavelength = obj.hBT.laser.readWavelength;
+                else
+                    obj.resetPlot;
+                end
 
                 % Pre-allocate local variables for plotting
-                observedPower = zeros(obj.numSteps, obj.sampleReps)*nan;
-                SIpower_mW = zeros(1, obj.numSteps);
-                powerSeriesPercent_mW = linspace(0,100,obj.numSteps);
+                observedPower_mW = nan(obj.numSteps, obj.sampleReps);
+                SIpower_mW = nan(1, obj.numSteps)';
+                powerSeriesPercent = linspace(0,100,obj.numSteps);
 
-                %powerSeriesPercent_matrix_tmp = repmat(powerSeriesPercent_mW',1,sampleReps);
-                %H_observed = plot(powerSeriesPercent_matrix_tmp(:),observedPower(:),'.k', ...
-                %    'Parent', obj.hAxPower);
-                % TODO -- the following should work instead of the above
-
-                %repmat(powerSeriesPercent_mW,1,obj.sampleReps)'
-                %size(observedPower(:)),
-                obj.H_observed = plot(repmat(powerSeriesPercent_mW,1,obj.sampleReps)', ...
-                            observedPower(:),'.k', 'Parent', obj.hAxPower);
+                % A linear fit will go here
+                obj.H_fit = plot([powerSeriesPercent(1), powerSeriesPercent(end)], ...
+                    [nan,nan],'-r','LineWidth',2,'Parent', obj.hAxPower);
 
                 hold(obj.hAxPower,'on')
 
+                obj.H_observed = plot(repmat(powerSeriesPercent,1,obj.sampleReps)', ...
+                            observedPower_mW(:),'.k', 'Parent', obj.hAxPower);
+
                 % The mean values at each percent power
-                obj.H_meanVal = plot(powerSeriesPercent_mW, mean(observedPower,2),'-r', ...
+                obj.H_meanVal = plot(powerSeriesPercent, mean(observedPower_mW,2),'-r', ...
                     'Parent', obj.hAxPower);
 
                 % The predicted power from ScanImage
+
                 obj.H_SI_Power = plot(powerSeriesPercent_mW, SIpower_mW*1000, '-b', ...% TODO--why is that x1000?
                     'Parent', obj.hAxPower);
 
-                % A linear fit will go here
-                obj.H_fit = plot([powerSeriesPercent_mW(1), powerSeriesPercent_mW(end)], ...
-                    [nan,nan],'-r','LineWidth',2,'Parent', obj.hAxPower);
+
 
                 hold(obj.hAxPower,'off')
 
-                %legend([obj.H_observed, obj.H_meanVal, obj.H_SI_Power], ...
-                %    'Raw values', 'Mean Observed Power', 'SI Power', ...
-                %    'Location', 'NorthWest')
-                title(sprintf('Wavelength = %d nm', obj.laserWavelength))
-                ylabel('Power (mW)')
-                xlabel('Percent power')
+                legend([obj.H_meanVal, obj.H_SI_Power], ...
+                    {'Mean Observed Power', 'SI Power'}, ...
+                    'Location', 'NorthWest')
+
+                title(sprintf('Wavelength = %d nm', obj.laserWavelength),'parent',obj.hAxPower)
+                obj.hAxPower.YLabel.String = 'Power (mW)';
+                obj.hAxPower.XLabel.String = 'Percent Power';
 
                 % Set Y axis limits to reasonable values from the start
-                ylim([0, obj.API.powerPercent2Watt(1)*1200])
-                xlim([0,105])
-                box on
-                grid on
+                obj.hAxPower.YLim = [0, obj.API.powerPercent2Watt(1)*1200];
+                obj.hAxPower.XLim = [0,105];
+
 
                 obj.API.turnOffAllPMTs
                 obj.API.pointBeam
@@ -300,33 +437,49 @@ classdef power < handle
                 % control the laser power in percentage
                 obj.API.setLaserPower(.01) ; % set laser power to 1%
 
+                box(obj.hAxPower,'on')
+                grid(obj.hAxPower,'on')
+
                 % Record and plot graph as we go
                 for ii = 1:obj.numSteps
-                    obj.API.setLaserPower(powerSeriesPercent_mW(ii)/100);
-                    pause(obj.settlingTime);
+
+                    obj.API.setLaserPower(powerSeriesPercent(ii)/100);
+                    pause(obj.settlingTime); % pause for 0.1 seconds
 
                     for jj = 1:obj.sampleReps
                         % Read power in W. Convert to mW and store.
-                        observedPower(ii,jj) = obj.powermeter.readPower*1000;
+                        observedPower_mW(ii,jj) = obj.powermeter.readPower*1000;
                     end
 
-                    % The power scanimage thinks it is at each percentage laser power
-                    SIpower_mW(ii) = obj.API.powerPercent2Watt(powerSeriesPercent_mW(ii)/100)*1000;
+                    % Overlay at the start the power scanimage thinks it is at each percentage
+                    % laser power
+                    SIpower_mW(ii) = obj.API.powerPercent2Watt(powerSeriesPercent(ii)/100)*1000;
 
-                    obj.H_observed.YData = observedPower(:);
-                    obj.H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
+                    obj.H_observed.YData = observedPower_mW(:);
+                    obj.H_meanVal.YData(ii) = mean(observedPower_mW(ii,:),2);
                     obj.H_SI_Power.YData(ii) = SIpower_mW(ii);
                     drawnow
                 end
 
-
                 obj.API.parkBeam;
+
+                % Plot the difference between the ScanImage curve and the recorded data
+                % in the right plot axis.
+                plot(mean(observedPower_mW,2), (SIpower_mW - mean(observedPower_mW,2)), 'ok', ...
+                    'MarkerFaceColor', [1,1,1]*0.5, ...
+                    'parent', obj.hAxResid);
+
+                obj.hAxResid.YLabel.String = 'SI\_Power - Observed\_Power (mW)';
+                obj.hAxResid.XLabel.String = 'Observed Power (mW)';
+                box(obj.hAxResid,'on')
+                grid(obj.hAxResid,'on')
+
 
                 % Assemble the power measurements in a structure that can be saved or
                 % returned at the command line to the base workspace.
-                obj.powerMeasurements.observedPower = observedPower;
-                obj.powerMeasurements.SIpower_mW = SIpower_mW';
-                obj.powerMeasurements.powerSeriesPercent_mW = powerSeriesPercent_mW;
+                obj.powerMeasurements.observedPower_mW = observedPower_mW;
+                obj.powerMeasurements.SIpower_mW = SIpower_mW;
+                obj.powerMeasurements.powerSeriesPercent = powerSeriesPercent;
                 obj.powerMeasurements.currentTime = datestr(now,'yyyy-mm-dd_HH-MM-SS');
                 obj.powerMeasurements.laserWavelength = obj.laserWavelength;
                 obj.powerMeasurements.fittedMinAndMax = [];
@@ -339,7 +492,7 @@ classdef power < handle
             end % recordPowerCurve
 
 
-            function saveData_Callback(obj,~,~)
+            function saveData(obj,~,~)
                 % This callback runs when the save button is pressed
 
                 if isempty(obj.powerMeasurements)
@@ -373,18 +526,22 @@ classdef power < handle
                 mpqc.tools.reportFileSaveLocation(saveDir,fileName)
             end % saveData_Callback
 
-            function data2base_Callback(obj,~,~)
+            function data2base(obj,~,~)
                 % Runs when the data2base button is pressed
                 assignin('base','PowerCalibrationData',obj.powerMeasurements);
+                fprintf('Data copied to base workspace as variable: "PowerCalibrationData"\n')
             end % data2base_Callback
 
-            function calibrateSI_Callback(obj,~,~)
+            function calibrateSI(obj,~,~)
                 % Runs when the calibrate SI button is called
+                %
+                % Uses the linear fit to set max and min limits in ScanImage
                 if isempty(obj.powerMeasurements)
                     return
                 end
 
-                minMax = obj.powerMeasurements.fittedMinAndMax;
+                minMax_W = round(obj.powerMeasurements.fittedMinAndMax)/1000;
+                obj.API.setBeamMinMaxPowerInW(minMax_W);
             end % calibrateSI_Callback
 
 
