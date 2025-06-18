@@ -35,12 +35,6 @@ classdef power < handle
         %   .laserWavelength
         %   .fittedMinAndMax
 
-        % Plot elements in raw data plot
-        H_observed
-        H_meanVal
-        H_SI_Power
-        H_fit
-
     end % properties
 
     properties (Hidden)
@@ -53,6 +47,11 @@ classdef power < handle
         hButton_data2base
         hButton_calibrateSI
 
+        % Plot elements in raw data plot
+        H_observed
+        H_meanVal
+        H_SI_Power
+        H_fit
 
         figureTag = 'powerMeterFig'
 
@@ -70,7 +69,7 @@ classdef power < handle
             % function mpqc.record.power('wavelength', value)
             %
             % Purpose
-            % Uses a powermeter in the sample plane to measure the true laser power at the
+            % Uses a power meter in the sample plane to measure the true laser power at the
             % objective at different percent power levels in ScanImage. Used to check that
             % the power calibration is accurate. The function also saves these predicted
             % power values.
@@ -101,7 +100,8 @@ classdef power < handle
                 out =  parseInputVariable(varargin{:});
                 obj.laserWavelength=out.wavelength;
 
-
+                obj.makeFigWindow
+                return
                 % Connect to ScanImage using the linker class
                 obj.API = sibridge.silinker;
 
@@ -257,7 +257,12 @@ classdef power < handle
                 obj.powerMeasurements.powerSeriesPercent_mW = powerSeriesPercent_mW;
                 obj.powerMeasurements.currentTime = datestr(now,'yyyy-mm-dd_HH-MM-SS');
                 obj.powerMeasurements.laserWavelength = obj.laserWavelength;
-                obj.powerMeasurements.fittedMinAndMax = obj.H_fit.YData;
+                obj.powerMeasurements.fittedMinAndMax = [];
+
+                % Updates obj.powerMeasurements.fittedMinAndMax
+                obj.fitRawData
+
+                obj.enableButtons;
 
             end % recordPowerCurve
 
@@ -311,6 +316,7 @@ classdef power < handle
                                 'String', 'Save Data', ...
                                 'ToolTip', 'Save data to Desktop', ...
                                 'Parent',obj.hFig, ...
+                                'Enable', 'off', ...
                                 'Callback', @obj.saveData_Callback);
 
                     obj.hButton_data2base = uicontrol(...
@@ -320,6 +326,7 @@ classdef power < handle
                                 'String', 'Data to base workspace', ...
                                 'ToolTip', 'Copy data to base workspace', ...
                                 'Parent',obj.hFig, ...
+                                'Enable', 'off', ...
                                 'Callback', @obj.data2base_Callback);
 
                     obj.hButton_calibrateSI = uicontrol(...
@@ -329,8 +336,8 @@ classdef power < handle
                                 'String', 'Calibrate ScanImage', ...
                                 'ToolTip', 'Apply calibration data to ScanImage', ...
                                 'Parent',obj.hFig, ...
+                                'Enable', 'off', ...
                                 'Callback', @obj.calibrateSI_Callback);
-
 
 
                     obj.hFig.CloseRequestFcn = @obj.windowCloseFcn; %So closing the window triggers the destructor
@@ -349,8 +356,26 @@ classdef power < handle
                 cla(obj.hAxResid)
                 obj.powerMeasurements = [];
 
+                obj.disableButtons
+
             end % reset plot
 
+
+            function disableButtons(obj)
+                % disables buttons when no data are available to save
+
+                obj.hButton_save.Enable='off';
+                obj.hButton_data2base.Enable='off';
+                obj.hButton_calibrateSI.Enable='off';
+            end % disableButtons
+
+            function enableButtons(obj)
+                % enables buttons when no data are available to save
+
+                obj.hButton_save.Enable='on';
+                obj.hButton_data2base.Enable='on';
+                obj.hButton_calibrateSI.Enable='on';
+            end % disableButtons
         end
 
 
