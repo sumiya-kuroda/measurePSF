@@ -35,6 +35,11 @@ classdef power < handle
         %   .laserWavelength
         %   .fittedMinAndMax
 
+        % Plot elements in raw data plot
+        H_observed
+        H_meanVal
+        H_SI_Power
+        H_fit
 
     end % properties
 
@@ -48,11 +53,6 @@ classdef power < handle
         hButton_data2base
         hButton_calibrateSI
 
-        % Plot elements in raw data plot
-        H_observed
-        H_meanVal
-        H_SI_Power
-        H_fit
 
         figureTag = 'powerMeterFig'
 
@@ -101,9 +101,6 @@ classdef power < handle
                 out =  parseInputVariable(varargin{:});
                 obj.laserWavelength=out.wavelength;
 
-                obj.makeFigWindow
-
-                return
 
                 % Connect to ScanImage using the linker class
                 obj.API = sibridge.silinker;
@@ -121,6 +118,9 @@ classdef power < handle
 
 
                 obj.connectToPowerMeter
+
+                obj.makeFigWindow
+
             end
 
 
@@ -164,7 +164,7 @@ classdef power < handle
                 end
 
                 obj.powermeter.connect
-                obj.powermeter.setWaveLength(laserWavelength)
+                obj.powermeter.setWaveLength(obj.laserWavelength)
 
             end % connectToPowerMeter
 
@@ -175,14 +175,8 @@ classdef power < handle
                 %
                 % power.recordPowerCurve
 
-                obj.API.turnOffAllPMTs
-                obj.API.pointBeam
 
-                % control the laser power in percentage
-                obj.API.setLaserPower(.01) ; % set laser power to 1%
-
-
-                obj.resetPlot
+                obj.resetPlot;
 
                 % Pre-allocate local variables for plotting
                 observedPower = zeros(obj.numSteps, obj.sampleReps)*nan;
@@ -193,10 +187,13 @@ classdef power < handle
                 %H_observed = plot(powerSeriesPercent_matrix_tmp(:),observedPower(:),'.k', ...
                 %    'Parent', obj.hAxPower);
                 % TODO -- the following should work instead of the above
-                obj.H_observed = plot(repmat(powerSeriesPercent_mW,obj.sampleReps,1)', ...
+
+                %repmat(powerSeriesPercent_mW,1,obj.sampleReps)'
+                %size(observedPower(:)),
+                obj.H_observed = plot(repmat(powerSeriesPercent_mW,1,obj.sampleReps)', ...
                             observedPower(:),'.k', 'Parent', obj.hAxPower);
 
-                hold on
+                hold(obj.hAxPower,'on')
 
                 % The mean values at each percent power
                 obj.H_meanVal = plot(powerSeriesPercent_mW, mean(observedPower,2),'-r', ...
@@ -208,13 +205,13 @@ classdef power < handle
 
                 % A linear fit will go here
                 obj.H_fit = plot([powerSeriesPercent_mW(1), powerSeriesPercent_mW(end)], ...
-                    [nan,nan],'-r','LineWidth',2)
+                    [nan,nan],'-r','LineWidth',2,'Parent', obj.hAxPower);
 
-                hold off
+                hold(obj.hAxPower,'off')
 
-                legend([obj.H_observed obj.H_meanVal obj.H_SI_Power], ...
-                    'Raw values', 'Mean Observed Power', 'SI Power', ...
-                    'Location', 'NorthWest')
+                %legend([obj.H_observed, obj.H_meanVal, obj.H_SI_Power], ...
+                %    'Raw values', 'Mean Observed Power', 'SI Power', ...
+                %    'Location', 'NorthWest')
                 title(sprintf('Wavelength = %d nm', obj.laserWavelength))
                 ylabel('Power (mW)')
                 xlabel('Percent power')
@@ -225,29 +222,33 @@ classdef power < handle
                 box on
                 grid on
 
+                obj.API.turnOffAllPMTs
+                obj.API.pointBeam
 
+                % control the laser power in percentage
+                obj.API.setLaserPower(.01) ; % set laser power to 1%
 
                 % Record and plot graph as we go
-                for ii = 1:numSteps
+                for ii = 1:obj.numSteps
                     obj.API.setLaserPower(powerSeriesPercent_mW(ii)/100);
                     pause(0.1); % pause for 0.1 seconds
 
-                    for jj = 1:sampleReps
+                    for jj = 1:obj.sampleReps
                         % Read power in W. Convert to mW and store.
-                        observedPower(ii,jj) = obj.powermeter.readPower *1000;
+                        observedPower(ii,jj) = obj.powermeter.readPower*1000;
                     end
 
                     % The power scanimage thinks it is at each percentage laser power
                     SIpower_mW(ii) = obj.API.powerPercent2Watt(powerSeriesPercent_mW(ii)/100)*1000;
 
-                    H_observed.YData = observedPower(:);
-                    H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
-                    H_SI_Power.YData(ii) = SIpower_mW(ii);
+                    obj.H_observed.YData = observedPower(:);
+                    obj.H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
+                    obj.H_SI_Power.YData(ii) = SIpower_mW(ii);
                     drawnow
                 end
 
 
-                obj.API.parkBeam
+                obj.API.parkBeam;
 
                 % Assemble the power measurements in a structure that can be saved or
                 % returned at the command line to the base workspace.
@@ -255,7 +256,7 @@ classdef power < handle
                 obj.powerMeasurements.SIpower_mW = SIpower_mW';
                 obj.powerMeasurements.powerSeriesPercent_mW = powerSeriesPercent_mW;
                 obj.powerMeasurements.currentTime = datestr(now,'yyyy-mm-dd_HH-MM-SS');
-                obj.powerMeasurements.laserWavelength = laserWavelength;
+                obj.powerMeasurements.laserWavelength = obj.laserWavelength;
                 obj.powerMeasurements.fittedMinAndMax = obj.H_fit.YData;
 
             end % recordPowerCurve
@@ -264,8 +265,15 @@ classdef power < handle
             function fitRawData(obj)
                 % linear fit of raw data
 
-                x = obj.H_observed.XData;
-                y = obj.H_observed.YData;
+                if isempty(obj.powerMeasurements)
+                    return
+                end
+
+                xraw = obj.H_observed.XData(:);
+                y = obj.H_observed.YData(:);
+
+                x=[ones(size(xraw)),xraw];
+
                 [b,bint,r,~,out_stats]=regress(y,x);
 
                 X = obj.H_fit.XData;
@@ -273,7 +281,7 @@ classdef power < handle
 
                 obj.H_fit.YData = Y;
 
-
+                obj.powerMeasurements.fittedMinAndMax = Y;
             end % fitRawData
 
 
@@ -366,7 +374,7 @@ classdef power < handle
                 SETTINGS=mpqc.settings.readSettings;
 
                 fileName = sprintf('%s_power_calib_%dnm__%s', ...
-                    SETTINGS.microscope.name, laserWavelength, ...
+                    SETTINGS.microscope.name, obj.laserWavelength, ...
                      datestr(now,'yyyy-mm-dd_HH-MM-SS'));
 
                 % Save data to this location
