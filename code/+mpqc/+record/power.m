@@ -3,12 +3,17 @@ classdef power < handle
     % Measures the power at the objective at a range of percent power values in SI
     %
     % Purpose
-    % Uses a powermeter in the sample plane to measure the true laser power at the
+    % Uses a power meter in the sample plane to measure the true laser power at the
     % objective at different percent power levels in ScanImage. Used to check that
     % the power calibration is accurate. The function also saves these predicted
     % power values.
     %
-    %
+    % Usage notes
+    % Change wavelength with, for example:
+    % P = mpqc.record.power(800);
+    % P.recordPowerCurve
+    % P.laserWavelength(920)
+    % P.recordPowerCurve
     %
     % Requirements
     % You must have installed ThorLabs power meter GUI from:
@@ -46,6 +51,7 @@ classdef power < handle
         hButton_save
         hButton_data2base
         hButton_calibrateSI
+        hButton_runPowerMeasure
 
         % Plot elements in raw data plot
         H_observed
@@ -99,22 +105,24 @@ classdef power < handle
                 % Parse inputs and ensure user has supplied the current wavelength
                 out =  parseInputVariable(varargin{:});
 
-                % Connect to ScanImage using the linker class
-                obj.API = sibridge.silinker;
+                if ~ismac
+                    % Connect to ScanImage using the linker class
+                    obj.API = sibridge.silinker;
 
-                if obj.API.linkSucceeded == false
-                    % Bail out if no ScanImage
-                    return
+                    if obj.API.linkSucceeded == false
+                        % Bail out if no ScanImage
+                        return
+                    end
+
+
+
+                    % Record the state of all ScanImage settings we will change so we can
+                    % change them back
+                    obj.cachedSettings = mpqc.tools.recordScanImageSettings(obj.API);
+
+
+                    obj.connectToPowerMeter
                 end
-
-
-
-                % Record the state of all ScanImage settings we will change so we can
-                % change them back
-                obj.cachedSettings = mpqc.tools.recordScanImageSettings(obj.API);
-
-
-                obj.connectToPowerMeter
 
                 obj.makeFigWindow
                 obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
@@ -169,7 +177,147 @@ classdef power < handle
 
 
 
-            function recordPowerCurve(obj)
+            function fitRawData(obj)
+                % linear fit of raw data
+
+                if isempty(obj.powerMeasurements)
+                    return
+                end
+
+                xraw = obj.H_observed.XData(:);
+                y = obj.H_observed.YData(:);
+
+                x=[ones(size(xraw)),xraw];
+
+                [b,bint,r,~,out_stats]=regress(y,x);
+
+                X = obj.H_fit.XData;
+                Y = b(1)+ X*b(2);
+
+                obj.H_fit.YData = Y;
+
+                obj.powerMeasurements.fittedMinAndMax = Y;
+            end % fitRawData
+
+
+            function makeFigWindow(obj)
+                % Build the figure window if it is not already there
+
+                % TODO -- it's possible we don't actually need to find the existing window
+                H = findobj('Tag',obj.figureTag);
+
+                if isempty(H)
+                    obj.hFig = figure('Tag',obj.figureTag);
+                    figure(obj.hFig);
+
+
+                    obj.hAxPower = axes('Position', [0.08,0.20,0.40,0.60], ...
+                                'parent', obj.hFig);
+
+                    obj.hAxResid = axes('Position', [0.58,0.20,0.40,0.60], ...
+                                'parent', obj.hFig);
+
+
+                    % A save button is added at the end so the user can optionally save data
+                    obj.hButton_save = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.71, 0.015, 0.15, 0.04], ...
+                                'String', 'Save Data', ...
+                                'ToolTip', 'Save data to Desktop', ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.saveData_Callback);
+
+                    obj.hButton_data2base = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.49, 0.015, 0.2, 0.04], ...
+                                'String', 'Data to base workspace', ...
+                                'ToolTip', 'Copy data to base workspace', ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.data2base_Callback);
+
+                    obj.hButton_calibrateSI = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.27, 0.015, 0.2, 0.04], ...
+                                'String', 'Calibrate ScanImage', ...
+                                'ToolTip', 'Apply calibration data to ScanImage', ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'off', ...
+                                'Callback', @obj.calibrateSI_Callback);
+
+                    obj.hButton_runPowerMeasure = uicontrol(...
+                                'Style', 'PushButton', ...
+                                'Units', 'Normalized', ...
+                                'Position', [0.05, 0.015, 0.2, 0.04], ...
+                                'String', 'Measure Power Curve', ...
+                                'ToolTip', 'Measure powerCurve (power.Apply calibration data to ScanImage', ...
+                                'Parent', obj.hFig, ...
+                                'Enable', 'on', ...
+                                'Callback', @obj.recordPowerCurve);
+
+                    % So closing the window triggers the destructor
+                    obj.hFig.CloseRequestFcn = @obj.windowCloseFcn;
+                else
+                    obj.hFig = findobj('Tag',obj.figureTag);
+                end
+            end % makeFigWindow
+
+
+            function resetPlot(obj)
+                % Reset all the plots and wipe all plotted data
+                %
+                % power.resetPlot()
+
+                cla(obj.hAxPower)
+                cla(obj.hAxResid)
+                obj.powerMeasurements = [];
+
+                obj.disableButtons
+
+            end % reset plot
+
+
+            function disableButtons(obj)
+                % disables buttons when no data are available to save
+
+                obj.hButton_save.Enable='off';
+                obj.hButton_data2base.Enable='off';
+                obj.hButton_calibrateSI.Enable='off';
+            end % disableButtons
+
+            function enableButtons(obj)
+                % enables buttons when no data are available to save
+
+                obj.hButton_save.Enable='on';
+                obj.hButton_data2base.Enable='on';
+                obj.hButton_calibrateSI.Enable='on';
+            end % disableButtons
+
+        end % main methods
+
+
+
+        % Getters or setter
+        methods
+
+            function set.laserWavelength(obj,val)
+                % Reset the plot if the user changes wavelength. This makes it less
+                % likely the user will acquire data tagged with the wrong wavelength.
+                obj.resetPlot
+                obj.laserWavelength = val;
+            end
+
+        end % getters/setters
+
+
+
+        % Callbacks
+        methods
+            function recordPowerCurve(obj,~,~)
                 % Record power curve and compare to compare actual vs expected
                 %
                 % power.recordPowerCurve
@@ -266,136 +414,6 @@ classdef power < handle
             end % recordPowerCurve
 
 
-            function fitRawData(obj)
-                % linear fit of raw data
-
-                if isempty(obj.powerMeasurements)
-                    return
-                end
-
-                xraw = obj.H_observed.XData(:);
-                y = obj.H_observed.YData(:);
-
-                x=[ones(size(xraw)),xraw];
-
-                [b,bint,r,~,out_stats]=regress(y,x);
-
-                X = obj.H_fit.XData;
-                Y = b(1)+ X*b(2);
-
-                obj.H_fit.YData = Y;
-
-                obj.powerMeasurements.fittedMinAndMax = Y;
-            end % fitRawData
-
-
-            function makeFigWindow(obj)
-                % Build the figure window if it is not already there
-
-                % TODO -- it's possible we don't actually need to find the existing window
-                H = findobj('Tag',obj.figureTag);
-
-                if isempty(H)
-                    obj.hFig = figure('Tag',obj.figureTag);
-                    figure(obj.hFig);
-
-
-                    obj.hAxPower = axes('Position', [0.08,0.15,0.4,0.4], ...
-                                'parent', obj.hFig);
-
-                    obj.hAxResid = axes('Position', [0.58,0.15,0.4,0.4], ...
-                                'parent', obj.hFig);
-
-
-                    % A save button is added at the end so the user can optionally save data
-                    obj.hButton_save = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.75, 0.015, 0.15, 0.04], ...
-                                'String', 'Save Data', ...
-                                'ToolTip', 'Save data to Desktop', ...
-                                'Parent',obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.saveData_Callback);
-
-                    obj.hButton_data2base = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.45, 0.015, 0.25, 0.04], ...
-                                'String', 'Data to base workspace', ...
-                                'ToolTip', 'Copy data to base workspace', ...
-                                'Parent',obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.data2base_Callback);
-
-                    obj.hButton_calibrateSI = uicontrol(...
-                                'Style', 'PushButton', ...
-                                'Units', 'Normalized', ...
-                                'Position', [0.15, 0.015, 0.25, 0.04], ...
-                                'String', 'Calibrate ScanImage', ...
-                                'ToolTip', 'Apply calibration data to ScanImage', ...
-                                'Parent',obj.hFig, ...
-                                'Enable', 'off', ...
-                                'Callback', @obj.calibrateSI_Callback);
-
-
-                    obj.hFig.CloseRequestFcn = @obj.windowCloseFcn; %So closing the window triggers the destructor
-                else
-                    obj.hFig = findobj('Tag',obj.figureTag);
-                end
-            end % makeFigWindow
-
-
-            function resetPlot(obj)
-                % Reset all the plots and wipe all plotted data
-                %
-                % power.resetPlot()
-
-                cla(obj.hAxPower)
-                cla(obj.hAxResid)
-                obj.powerMeasurements = [];
-
-                obj.disableButtons
-
-            end % reset plot
-
-
-            function disableButtons(obj)
-                % disables buttons when no data are available to save
-
-                obj.hButton_save.Enable='off';
-                obj.hButton_data2base.Enable='off';
-                obj.hButton_calibrateSI.Enable='off';
-            end % disableButtons
-
-            function enableButtons(obj)
-                % enables buttons when no data are available to save
-
-                obj.hButton_save.Enable='on';
-                obj.hButton_data2base.Enable='on';
-                obj.hButton_calibrateSI.Enable='on';
-            end % disableButtons
-
-        end % main methods
-
-
-
-        % Getters or setter
-        methods
-
-            function set.laserWavelength(obj,val)
-                % Reset the plot if the user changes wavelength. This makes it less
-                % likely the user will acquire data tagged with the wrong wavelength.
-                obj.resetPlot
-                obj.laserWavelength = val;
-            end
-
-        end % getters/setters
-
-
-
-        % Callbacks
-        methods
             function saveData_Callback(obj,~,~)
                 % This callback runs when the save button is pressed
 
