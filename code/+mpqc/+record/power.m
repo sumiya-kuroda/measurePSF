@@ -17,7 +17,7 @@ function varargout = power(varargin)
     % powerMeasurements - a structure containing the recorded data with fields:
     %   .observedPower
     %   .currentTime
-    %   .SIpower
+    %   .SIpower_mW
     %   .laser_wavelength
     %
     %
@@ -95,15 +95,15 @@ function varargout = power(varargin)
 
     % Pre-allocate
     observedPower = zeros(numSteps,sampleReps)*nan;
-    SIpower = zeros(1,numSteps);
-    powerSeriesPercent = linspace(0,100,numSteps);
-    powerSeriesPercentMatrix = repmat(powerSeriesPercent',1,sampleReps);
-
-    H_observed = plot(powerSeriesPercentMatrix(:),observedPower(:),'.k');
+    SIpower_mW = zeros(1,numSteps);
+    powerSeriesPercent_mW = linspace(0,100,numSteps);
+    
+    powerSeriesPercent_matrix_tmp = repmat(powerSeriesPercent_mW',1,sampleReps);
+    H_observed = plot(powerSeriesPercent_matrix_tmp(:),observedPower(:),'.k');
 
     hold on
-    H_meanVal = plot(powerSeriesPercent,mean(observedPower,2),'-r');
-    H_SI_Power = plot(powerSeriesPercent,SIpower*1000, '-b');
+    H_meanVal = plot(powerSeriesPercent_mW,mean(observedPower,2),'-r');
+    H_SI_Power = plot(powerSeriesPercent_mW,SIpower_mW*1000, '-b');
     hold off
 
     legend([H_observed H_meanVal H_SI_Power], ...
@@ -122,7 +122,7 @@ function varargout = power(varargin)
 
     % Record and plot graph as we go
     for ii = 1:numSteps
-        API.setLaserPower(powerSeriesPercent(ii)/100);
+        API.setLaserPower(powerSeriesPercent_mW(ii)/100);
         pause(0.1); % pause for 0.1 seconds
 
         for jj = 1:sampleReps
@@ -131,11 +131,11 @@ function varargout = power(varargin)
         end
 
         % The power scanimage thinks it is at each percentage laser power
-        SIpower(ii) = API.powerPercent2Watt(powerSeriesPercent(ii)/100);
+        SIpower_mW(ii) = API.powerPercent2Watt(powerSeriesPercent_mW(ii)/100)*1000;
 
         H_observed.YData = observedPower(:);
         H_meanVal.YData(ii) = mean(observedPower(ii,:),2);
-        H_SI_Power.YData(ii) = SIpower(ii)*1000;
+        H_SI_Power.YData(ii) = SIpower_mW(ii);
         drawnow
     end
 
@@ -163,17 +163,18 @@ function varargout = power(varargin)
     % TODO -- add calibrate button
 
     % TODO -- could add a second button that returns the structure to the base workspace
-
+    
 
     % Assemble the power measurements in a structure that can be saved or returned at the
     % command line to the base workspace.
     powerMeasurements.observedPower = observedPower;
-    powerMeasurements.SIpower = SIpower;
+    powerMeasurements.SIpower_mW = SIpower_mW';
+    powerMeasurements.powerSeriesPercent_mW = powerSeriesPercent_mW;
     powerMeasurements.currentTime = datestr(now,'yyyy-mm-dd_HH-MM-SS');
     powerMeasurements.laser_wavelength= laser_wavelength;
 
 
-    %optionally return data structure
+    % Optionally return data structure
     if nargout > 0
         varargout{1} = powerMeasurements;
     end
