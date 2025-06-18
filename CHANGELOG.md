@@ -2,6 +2,11 @@
 # Change-Log
 
 
+### 2025/06/18
+* UPDATE: Convert power measurement code to a class and add features to enable automation 
+     of power measurements. Streamline how the interface to the power meter is handled. RAAC
+
+
 ### 2025/03/07
 * NEW: Add facility for checking calibrated power at the sample plane automatically. Isabell Whiteley [PR #95]([https://github.com/SWC-Advanced-Microscopy/multiphoton-qc/pull/95).
 
