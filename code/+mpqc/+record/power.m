@@ -98,10 +98,7 @@ classdef power < handle
                 %%
                 % Parse inputs and ensure user has supplied the current wavelength
                 out =  parseInputVariable(varargin{:});
-                obj.laserWavelength=out.wavelength;
 
-                obj.makeFigWindow
-                return
                 % Connect to ScanImage using the linker class
                 obj.API = sibridge.silinker;
 
@@ -120,8 +117,9 @@ classdef power < handle
                 obj.connectToPowerMeter
 
                 obj.makeFigWindow
+                obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
 
-            end
+            end % constructor
 
 
             function delete(obj)
@@ -141,6 +139,7 @@ classdef power < handle
                 delete(obj.hFig)
 
             end % delete
+
 
             function connectToPowerMeter(obj)
                 % Connect to power meter and set wavelength. Bail out if we can't connect to it.
@@ -376,7 +375,23 @@ classdef power < handle
                 obj.hButton_data2base.Enable='on';
                 obj.hButton_calibrateSI.Enable='on';
             end % disableButtons
-        end
+
+        end % main methods
+
+
+
+        % Getters or setter
+        methods
+
+            function set.laserWavelength(obj,val)
+                % Reset the plot if the user changes wavelength. This makes it less
+                % likely the user will acquire data tagged with the wrong wavelength.
+                obj.resetPlot
+                obj.laserWavelength = val;
+            end
+
+        end % getters/setters
+
 
 
         % Callbacks
