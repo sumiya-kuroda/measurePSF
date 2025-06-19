@@ -150,11 +150,6 @@ classdef power < handle
             %  'wavelength' - Excitation wavelength of the laser. Defined in nm.
             %
 
-            %%
-            % Parse inputs and ensure user has supplied the current wavelength
-            out =  parseInputVariable(varargin{:});
-
-
             if ~ismac % to enable debugging on Macs without hardware
 
                 % Connect to ScanImage using the linker class
