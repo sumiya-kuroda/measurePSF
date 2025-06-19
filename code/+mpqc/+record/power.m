@@ -59,14 +59,16 @@ classdef power < handle
     % If you are happy that the recorded data look good, press the "Calibrate ScanImage"
     % button and re-run "Measure Power Curve". The expected and measured curves should
     % correspond closely. You may find that very low percent power values now correspond
-    % to negative power values. This is because of an imperfect offset of some modulators
+    % to negative power values. This may be due to an imperfect offset of some modulators
     % and arises from their sinusoidal relationship between command voltage and power
-    % output. In most cases these negative values are not a problem as we don't need the
-    % very low end of the scale. If you need to image a precise low power (such as 5 mW)
-    % it is a good idea to measure this before starting and not rely on ScanImage.
-    % If you use only lower power values, you can restrict the maximum command signal and
-    % play with the offset of the modulator to get a pretty good correspondence between
-    % actual and predicted power over your range of interest.
+    % output. It can also be due to your power meter sensor being too slow. Try altering 
+    % the settlingTime property if you are concerned about this. In most cases these 
+    % negative values are not a problem as we don't need the very low end of the scale. 
+    % If you need to image a precise low power (such as 5 mW) it is a good idea to measure 
+    % this before starting and not rely on ScanImage. If you use only lower power values, 
+    % you can restrict the maximum command signal and play with the offset of the modulator 
+    % to get a pretty good correspondence between actual and predicted power over your 
+    % range of interest.
     %
     %
     % ** BakingTray Interface
@@ -93,7 +95,7 @@ classdef power < handle
 
         % Time between changing the laser power and starting to measure.
         % This is to take into account settling time of the power sensor head.
-        settlingTime = 0.2;
+        settlingTime = 0.33;
 
         laserWavelength
 
@@ -364,7 +366,7 @@ classdef power < handle
                 'Parent', obj.hAxPower);
 
             % The predicted power from ScanImage
-            obj.H_SI_Power = plot(powerSeriesPercent_mW, SIpower_mW*1000, '-b', ...% TODO--why is that x1000?
+            obj.H_SI_Power = plot(powerSeriesPercent, SIpower_mW*1000, '-b', ...% TODO--why is that x1000?
                 'Parent', obj.hAxPower);
 
             hold(obj.hAxPower,'off')
@@ -384,8 +386,9 @@ classdef power < handle
             obj.API.turnOffAllPMTs
             obj.API.pointBeam
 
-            % control the laser power in percentage
-            obj.API.setLaserPower(.01) ; % set laser power to 1%
+            % Zero laser before starting
+            obj.API.setLaserPower(0) ;
+            pause(obj.settlingTime*3) % cautious
 
             box(obj.hAxPower,'on')
             grid(obj.hAxPower,'on')
