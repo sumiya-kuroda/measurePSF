@@ -88,7 +88,7 @@ classdef power < handle
 
     properties
         % The number of steps over which the sample the power fraction range.
-        numSteps = 21;
+        numSteps = 11;
 
         % The number of times to measure power at each percent power value
         sampleReps = 4;
@@ -350,7 +350,7 @@ classdef power < handle
             % Pre-allocate local variables for plotting
             observedPower_mW = nan(obj.numSteps, obj.sampleReps);
             SIpower_mW = nan(1, obj.numSteps)';
-            powerSeriesPercent = linspace(0,100,obj.numSteps);
+            powerSeriesPercent = linspace(1,100,obj.numSteps);
 
             % A linear fit will go here
             obj.H_fit = plot([powerSeriesPercent(1), powerSeriesPercent(end)], ...
@@ -388,7 +388,7 @@ classdef power < handle
 
             % Zero laser before starting
             obj.API.setLaserPower(0) ;
-            pause(obj.settlingTime*3) % cautious
+            pause(1) 
 
             box(obj.hAxPower,'on')
             grid(obj.hAxPower,'on')
@@ -436,6 +436,7 @@ classdef power < handle
             obj.powerMeasurements.currentTime = datestr(now,'yyyy-mm-dd_HH-MM-SS');
             obj.powerMeasurements.laserWavelength = obj.laserWavelength;
             obj.powerMeasurements.fittedMinAndMax = [];
+            obj.powerMeasurements.sensorName = obj.powermeter.sensorName;
 
             % Updates obj.powerMeasurements.fittedMinAndMax
             obj.fitRawData
