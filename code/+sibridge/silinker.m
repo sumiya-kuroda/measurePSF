@@ -324,12 +324,9 @@ classdef silinker < handle
 
 
         function numBeams = numberOfAvailableBeams(obj)
-            % Return the number of available channels as an integer
-            % These are all the channels that the microscope system can possibly acquire.
-            % They may not all have a connected PMT.
-            % TODO -- I think there is no way to know whether one is connected
+            % Return the number of available beams as an integer
             numBeams = numel(obj.hSI.hBeams.hBeams);
-        end % numberOfAvailableChannels
+        end % numberOfAvailableBeams
 
         function disableChannelOffsetSubtraction(obj)
             % Disable the offset subtraction for the PMT inputs
