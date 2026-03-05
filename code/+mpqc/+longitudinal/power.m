@@ -34,7 +34,6 @@ end
 
 debugPlots = true;
 
-possibleFields = {'observedPower', 'observedPower_mW'};
 maintenanceFiles = dir(fullfile(data_dir,'\**\*.mat'));
 n=1;
 
@@ -74,30 +73,18 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     plotting_template = plotting_template(startIndex:end);
 end
 
+
 if isequal(plotting_template(:).wavelength) % if wavelength is the same
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.mat')
             % If power data is found, load it and find max value
             powerData(ii) = load(plotting_template(ii).full_path_to_data);
-            % for i = 1:length(possibleFields)
-            %     if isfield(powerData.powerMeasurements,possibleFields{i})
-            %         maxPower(ii) = powerData(ii).powerMeasurements.possibleFields{i}(end);
-            %         break
-            %     end
-            % end
-            for i = 1:length(possibleFields) % Added because legacy version used different variable name
-                    if isfield(powerData(ii).powerMeasurements,possibleFields) == 1
-                        obsPower(ii) = powerData(ii).powerMeasurements.possibleFields;
-                        % maxPower(ii,jj) = obsPower()
-                        break
-                    end
-                end
+            maxPower(ii) = powerData(ii).powerMeasurements.observedPower_mW(end);
 
             % Plot the power curves for each date
             hold on
             subplot(2,1,1)
-            % plot([0:5:100],powerData(ii).powerMeasurements.observedPower,'.')
-            plot([0:5:100],obsPower(ii),'.')
+            plot(linspace(0,100,length(powerData(ii).powerMeasurements.observedPower_mW)),mean(powerData(ii).powerMeasurements.observedPower_mW,2),'.')
             legend(plotting_template.date,'location', 'Northwest')
             title(cell2mat(['Power at ', string(plotting_template(1).wavelength), 'nm']))
             xlabel('Percent power')
@@ -112,12 +99,7 @@ if isequal(plotting_template(:).wavelength) % if wavelength is the same
     xlabels = {plotting_template.date};
     xticks(1:length(xlabels))
     xticklabels(xlabels)
-    ylabel('Maximum power (mW)')
-
-    % elseif isequal(plotting_template(:).wavelength,selectWavelength)
-    % elseif ~isempty(selectWavelength)
-    %     tempStruc = find(plotting_template(:).wavelength == selectWavelength);
-    % % if wavelength given in varargin, plot only that wavelength and dates
+    ylabel('Maximum power (mW)')   
 
 else % if there are different wavelengths measured
     % disp('Different wavelengths found')
@@ -136,23 +118,24 @@ else % if there are different wavelengths measured
 
             if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelengthVals(jj))
                 % If power data is found, load it and find max value
-
-                powerData(ii) = load(plotting_template(ii).full_path_to_data);
-
-                for i = 1:length(possibleFields) % Added because legacy version used different variable name
-                    if isfield(powerData(ii).powerMeasurements,possibleFields)
-                        obsPower(ii,jj) = powerData(ii).powerMeasurements.possibleFields;
-                        % maxPower(ii,jj) = obsPower()
-                        break
-                    end
-                end
+                 powerData(ii,jj) = load(plotting_template(ii).full_path_to_data);
+            maxPower(ii,jj) = powerData(ii).powerMeasurements.observedPower_mW(end);
+                % powerData(ii) = load(plotting_template(ii).full_path_to_data);
+                % 
+                % for i = 1:length(possibleFields) % Added because legacy version used different variable name
+                %     if isfield(powerData(ii).powerMeasurements,possibleFields)
+                %         obsPower(ii,jj) = powerData(ii).powerMeasurements.possibleFields;
+                %         % maxPower(ii,jj) = obsPower()
+                %         break
+                %     end
+                % end
                 % maxPower(ii,jj) = powerData(end);
                 % maxPower(ii,jj) = powerData(ii).powerMeasurements.observedPower(end);
 
 
                 hold on
                 % subplot(2,1,1)
-                plot([0:5:100],powerData(ii,jj).powerMeasurements.observedPower,'.')
+                plot([0:5:100],powerData(ii,jj).powerMeasurements.observedPower_mW,'.')
                 legend(plotting_template(ii).date,'location', 'Northwest') % incorrect
                 title(cell2mat(['Power at ', string(wavelengthVals(jj)), 'nm']))
                 xlabel('Percent power')
@@ -161,27 +144,7 @@ else % if there are different wavelengths measured
             end
         end
     end
-    % for ii = 1:length(numWavelength)
-    % end
-    % separate plots for each wavelength
-    % tried groupcounts
-    % in R2025a numunique function may work
-
-    % plot wavelengths separately, but keep all dates - so assisgn NaN to
-    % unused dates. Make temporary structures so values are not permanently
-    %  replaced
 end
-
-
-
-% identify wavelength - done
-% plot curves on same plot - done
-% separate plots based on wavelength
-% max value to see decay of laser - done
-
-
-
-
 
 
 % Output of the main function
