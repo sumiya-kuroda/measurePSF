@@ -112,32 +112,24 @@ else % if there are different wavelengths measured
     numWavelength = length(wavelengthVals);
     % maxPower = cell(length(plotting_template),length(wavelengthVals)); % Need to be cells because they will have empty values
     % powerData = cell(length(plotting_template),length(wavelengthVals));
+   
     for jj = 1:numWavelength
         figure;
+         a=0;
         for ii = 1:length(plotting_template)
-
+            
             if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelengthVals(jj))
                 % If power data is found, load it and find max value
-                 powerData(ii,jj) = load(plotting_template(ii).full_path_to_data);
-            maxPower(ii,jj) = powerData(ii,jj).powerMeasurements.observedPower_mW(end);
-                % powerData(ii) = load(plotting_template(ii).full_path_to_data);
-                % 
-                % for i = 1:length(possibleFields) % Added because legacy version used different variable name
-                %     if isfield(powerData(ii).powerMeasurements,possibleFields)
-                %         obsPower(ii,jj) = powerData(ii).powerMeasurements.possibleFields;
-                %         % maxPower(ii,jj) = obsPower()
-                %         break
-                %     end
-                % end
-                % maxPower(ii,jj) = powerData(end);
-                % maxPower(ii,jj) = powerData(ii).powerMeasurements.observedPower(end);
+                a=a+1;
+                powerData(a,jj) = load(plotting_template(ii).full_path_to_data);
+                maxPower(ii,jj) = powerData(a,jj).powerMeasurements.observedPower_mW(end);
+                waveDate(a,jj) = plotting_template(ii).date;
 
 
                 hold on
                 % subplot(2,1,1)
-                % plot([0:5:100],powerData(ii,jj).powerMeasurements.observedPower_mW,'.')
-                plot(linspace(0,100,length(powerData(ii,jj).powerMeasurements.observedPower_mW)),mean(powerData(ii,jj).powerMeasurements.observedPower_mW,2),'.')
-                legend(plotting_template(ii).date,'location', 'Northwest') % incorrect
+                plot(linspace(0,100,length(powerData(a,jj).powerMeasurements.observedPower_mW)),mean(powerData(a,jj).powerMeasurements.observedPower_mW,2),'.')
+                legend(waveDate(:,jj),'location', 'Northwest')        
                 title(cell2mat(['Power at ', string(wavelengthVals(jj)), 'nm']))
                 xlabel('Percent power')
                 ylabel('Power (mW)')
