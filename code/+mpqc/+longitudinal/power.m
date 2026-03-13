@@ -99,43 +99,46 @@ if isequal(plotting_template(:).wavelength) % if wavelength is the same
     xlabels = {plotting_template.date};
     xticks(1:length(xlabels))
     xticklabels(xlabels)
-    ylabel('Maximum power (mW)')   
+    ylabel('Maximum power (mW)')
 
 else % if there are different wavelengths measured
-    % disp('Different wavelengths found')
-    % powerData = [];
-    % maxPower = [];
+
     for i = 1:length(plotting_template)
         allWave(i) = plotting_template(i).wavelength;
     end
     wavelengthVals = unique(allWave);
     numWavelength = length(wavelengthVals);
-    % maxPower = cell(length(plotting_template),length(wavelengthVals)); % Need to be cells because they will have empty values
-    % powerData = cell(length(plotting_template),length(wavelengthVals));
-   
+
     for jj = 1:numWavelength
         figure;
-         a=0;
+        a=0;
         for ii = 1:length(plotting_template)
-            
+
             if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelengthVals(jj))
                 % If power data is found, load it and find max value
                 a=a+1;
                 powerData(a,jj) = load(plotting_template(ii).full_path_to_data);
-                maxPower(ii,jj) = powerData(a,jj).powerMeasurements.observedPower_mW(end);
+                maxPower(a,jj) = powerData(a,jj).powerMeasurements.observedPower_mW(end);
                 waveDate(a,jj) = plotting_template(ii).date;
 
 
                 hold on
-                % subplot(2,1,1)
+                subplot(2,1,1)
                 plot(linspace(0,100,length(powerData(a,jj).powerMeasurements.observedPower_mW)),mean(powerData(a,jj).powerMeasurements.observedPower_mW,2),'.')
-                legend(waveDate(:,jj),'location', 'Northwest')        
+                legend(waveDate(:,jj),'location', 'Northwest')
                 title(cell2mat(['Power at ', string(wavelengthVals(jj)), 'nm']))
                 xlabel('Percent power')
                 ylabel('Power (mW)')
                 hold off
             end
         end
+        subplot(2,1,2)
+        plot(maxPower(:,jj), '-*')
+        title('Maximum laser power')
+        xlabels = waveDate(:,jj);
+        xticks(1:length(xlabels))
+        xticklabels(xlabels)
+        ylabel('Maximum power (mW)')
     end
 end
 
