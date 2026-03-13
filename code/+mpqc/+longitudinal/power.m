@@ -5,7 +5,7 @@ function varargout = power(data_dir,varargin)
 %
 % Optional inputs:
 % 'startDate', month-year
-% 'wavelength, value
+% 'wavelength', value
 %
 % Purpose
 % Plots the power at the objective from 0-100% and compares maximum output
@@ -100,6 +100,40 @@ if isequal(plotting_template(:).wavelength) % if wavelength is the same
     xticks(1:length(xlabels))
     xticklabels(xlabels)
     ylabel('Maximum power (mW)')
+
+
+elseif  any(strcmp(varargin, 'wavelength'))% you only want to plot specific wavelength from varargin
+    % disp('it works')
+    idx = find(strcmp(varargin, 'wavelength'), 1);
+    wavelength = varargin{idx + 1};
+    a = 0;
+    for ii = 1:length(plotting_template)
+        
+        if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelength)
+            a=a+1;
+            powerData(a) = load(plotting_template(ii).full_path_to_data);
+            maxPower(a) = powerData(a).powerMeasurements.observedPower_mW(end);
+            waveDate(a) = plotting_template(ii).date;
+           
+            
+            hold on
+            subplot(2,1,1)
+            plot(linspace(0,100,length(powerData(a).powerMeasurements.observedPower_mW)),mean(powerData(a).powerMeasurements.observedPower_mW,2),'.')
+            legend(waveDate(:),'location', 'Northwest')
+            title(cell2mat(['Power at ', string(wavelength), 'nm']))
+            xlabel('Percent power')
+            ylabel('Power (mW)')
+            hold off
+        end
+    end
+    subplot(2,1,2)
+    plot(maxPower, '-*')
+    title('Maximum laser power')
+    xlabels = waveDate(:);
+    xticks(1:length(xlabels))
+    xticklabels(xlabels)
+    ylabel('Maximum power (mW)')
+
 
 else % if there are different wavelengths measured
 
