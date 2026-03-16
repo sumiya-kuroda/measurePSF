@@ -4,8 +4,10 @@ function varargout = power(data_dir,varargin)
 % mpqc.longitudinal.power(maintenace_folder_path, varargin)
 %
 % Optional inputs:
-% 'startDate', month-year
+% 'startDate', 'year-month-day'
+%  mpqc.longitudinal.power(maintenace_folder_path,'startDate','2024-06-01')
 % 'wavelength', value
+%  mpqc.longitudinal.power(maintenace_folder_path,'wavelength',800)
 %
 % Purpose
 % Plots the power at the objective from 0-100% and compares maximum output
@@ -17,20 +19,11 @@ function varargout = power(data_dir,varargin)
 %
 %
 %
-% Isabell Whiteley, SWC AMF 2025
+% Isabell Whiteley, SWC AMF 2026
 
 if nargin<1
     data_dir = pwd;
 end
-
-% For elseif statement of wavelength given in varargin
-% % process inputs
-%    % addpath("+tools");
-%    optInputs =  parseInputVariable(varargin{:});
-%
-%    % Extract critical input variable
-%    selectWavelength = optInputs.wavelength;
-%   % TODO Add to parseInputVariable startDate
 
 debugPlots = true;
 
@@ -73,8 +66,8 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     plotting_template = plotting_template(startIndex:end);
 end
 
-
-if isequal(plotting_template(:).wavelength) % if wavelength is the same
+% If only one wavelength is measured
+if isequal(plotting_template(:).wavelength) 
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.mat')
             % If power data is found, load it and find max value
@@ -101,9 +94,9 @@ if isequal(plotting_template(:).wavelength) % if wavelength is the same
     xticklabels(xlabels)
     ylabel('Maximum power (mW)')
 
+% If you only want to plot one measured wavelength, specified in varargin
+elseif  any(strcmp(varargin, 'wavelength'))
 
-elseif  any(strcmp(varargin, 'wavelength'))% you only want to plot specific wavelength from varargin
-    % disp('it works')
     idx = find(strcmp(varargin, 'wavelength'), 1);
     wavelength = varargin{idx + 1};
     a = 0;
@@ -124,18 +117,25 @@ elseif  any(strcmp(varargin, 'wavelength'))% you only want to plot specific wave
             xlabel('Percent power')
             ylabel('Power (mW)')
             hold off
+        else
+            % if varargin wavelength is not found
+            disp('No measurements found for provided wavelength')
         end
+        
     end
-    subplot(2,1,2)
-    plot(maxPower, '-*')
-    title('Maximum laser power')
-    xlabels = waveDate(:);
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    ylabel('Maximum power (mW)')
 
+    if exist('maxPower','var') % Only plots is varargin wavelength is present
+        subplot(2,1,2)
+        plot(maxPower, '-*')
+        title('Maximum laser power')
+        xlabels = waveDate(:);
+        xticks(1:length(xlabels))
+        xticklabels(xlabels)
+        ylabel('Maximum power (mW)')
+    end
 
-else % if there are different wavelengths measured
+% If multiple wavelengths have been recorded
+else 
 
     for i = 1:length(plotting_template)
         allWave(i) = plotting_template(i).wavelength;
