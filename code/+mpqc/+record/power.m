@@ -61,13 +61,13 @@ classdef power < handle
     % correspond closely. You may find that very low percent power values now correspond
     % to negative power values. This may be due to an imperfect offset of some modulators
     % and arises from their sinusoidal relationship between command voltage and power
-    % output. It can also be due to your power meter sensor being too slow. Try altering 
-    % the settlingTime property if you are concerned about this. In most cases these 
-    % negative values are not a problem as we don't need the very low end of the scale. 
-    % If you need to image a precise low power (such as 5 mW) it is a good idea to measure 
-    % this before starting and not rely on ScanImage. If you use only lower power values, 
-    % you can restrict the maximum command signal and play with the offset of the modulator 
-    % to get a pretty good correspondence between actual and predicted power over your 
+    % output. It can also be due to your power meter sensor being too slow. Try altering
+    % the settlingTime property if you are concerned about this. In most cases these
+    % negative values are not a problem as we don't need the very low end of the scale.
+    % If you need to image a precise low power (such as 5 mW) it is a good idea to measure
+    % this before starting and not rely on ScanImage. If you use only lower power values,
+    % you can restrict the maximum command signal and play with the offset of the modulator
+    % to get a pretty good correspondence between actual and predicted power over your
     % range of interest.
     %
     %
@@ -152,7 +152,7 @@ classdef power < handle
             %
             % Inputs (optional param/val pairs. If not defined, a CLI prompt appears)
             %  'wavelength' - Excitation wavelength of the laser. Defined in nm.
-            %  'beamIndex' - The index of beam to be calibrated. 
+            %  'beamIndex' - The index of beam to be calibrated.
             %
 
             if ~ismac % to enable debugging on Macs without hardware
@@ -185,7 +185,7 @@ classdef power < handle
 
             obj.makeFigWindow
             obj.laserWavelength=out.wavelength; % here since it triggers a figure reset
-            obj.beamIndex=out.beamIndex;
+            obj.beamIndex=1; %  TODO -- hard-coded for now. OK if system has only one beam
 
         end % constructor
 
@@ -411,7 +411,7 @@ classdef power < handle
 
             % Zero laser before starting
             obj.API.setLaserPower(0, obj.beamIndex) ;
-            pause(1) 
+            pause(1)
 
             box(obj.hAxPower,'on')
             grid(obj.hAxPower,'on')
@@ -437,6 +437,8 @@ classdef power < handle
                 drawnow
             end
 
+            % Set the laser power to zero and park the beam
+            obj.API.setLaserPower(0, obj.beamIndex);
             obj.API.parkBeam;
 
             % Plot the difference between the ScanImage curve and the recorded data

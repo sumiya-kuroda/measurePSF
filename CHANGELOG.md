@@ -1,6 +1,15 @@
 
 # Change-Log
 
+### 2026/03/17
+
+* Merged in longitudinal electrical noise plots. 
+
+### 2026/03/10
+
+* measurePSF reports to user if the Curve Fitting or Image Processing toolbox is not installed. 
+
+
 ### 2025/12/94
 * Allow serial number of equipment to be numeric only. 
 * Merge dev into master
