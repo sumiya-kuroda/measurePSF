@@ -403,7 +403,7 @@ classdef power < handle
             obj.hAxPower.XLabel.String = 'Percent Power';
 
             % Set Y axis limits to reasonable values from the start
-            obj.hAxPower.YLim = [0, obj.API.powerPercent2Watt(1)*1200];
+            obj.hAxPower.YLim = [0, obj.API.powerPercent2Watt(1)*1200]; %max power times 1.2
             obj.hAxPower.XLim = [0,105];
 
             obj.API.turnOffAllPMTs
