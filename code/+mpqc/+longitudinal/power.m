@@ -72,7 +72,9 @@ if isequal(plotting_template(:).wavelength)
         if contains(plotting_template(ii).full_path_to_data, '.mat')
             % If power data is found, load it and find max value
             powerData(ii) = load(plotting_template(ii).full_path_to_data);
-            maxPower(ii) = powerData(ii).powerMeasurements.observedPower_mW(end);
+            power = mean(powerData(ii).powerMeasurements.observedPower_mW');
+            maxPower(ii) = power(end); %  data is 11x4 and it only takes the final value rather than the average value
+            percentAt100mW(ii) = interp1(power,powerData(ii).powerMeasurements.powerSeriesPercent,100);
 
             % Plot the power curves for each date
             hold on
@@ -94,6 +96,8 @@ if isequal(plotting_template(:).wavelength)
     xticklabels(xlabels)
     ylabel('Maximum power (mW)')
 
+    figure;
+    plot(percentAt100mW)
 % If you only want to plot one measured wavelength, specified in varargin
 elseif  any(strcmp(varargin, 'wavelength'))
 
