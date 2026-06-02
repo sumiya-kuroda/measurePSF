@@ -1,6 +1,12 @@
 
 # Change-Log
 
+
+
+### 2026/04/33
+ * Fix typo that was causing numGains to not work for record.lens_paper
+
+
 ### 2026/03/17
 
 * Merged in longitudinal electrical noise plots. 
