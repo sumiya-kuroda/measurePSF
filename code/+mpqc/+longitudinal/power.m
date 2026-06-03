@@ -78,7 +78,7 @@ if isequal(plotting_template(:).wavelength)
 
             % Plot the power curves for each date
             hold on
-            subplot(2,1,1)
+            subplot(3,1,1)
             plot(linspace(0,100,length(powerData(ii).powerMeasurements.observedPower_mW)),mean(powerData(ii).powerMeasurements.observedPower_mW,2),'.')
             legend(plotting_template.date,'location', 'Northwest')
             title(cell2mat(['Power at ', string(plotting_template(1).wavelength), 'nm']))
@@ -88,7 +88,7 @@ if isequal(plotting_template(:).wavelength)
         end
     end
     % Plot the maximum laser output over time
-    subplot(2,1,2)
+    subplot(3,1,2)
     plot(maxPower, '-*')
     title('Maximum laser power')
     xlabels = {plotting_template.date};
@@ -96,8 +96,13 @@ if isequal(plotting_template(:).wavelength)
     xticklabels(xlabels)
     ylabel('Maximum power (mW)')
 
-    figure;
+    subplot(3,1,3)
     plot(percentAt100mW)
+    title('Percent power at 100mW')
+    xlabels = {plotting_template.date};
+    xticks(1:length(xlabels))
+    ylabel('Percent power')
+
 % If you only want to plot one measured wavelength, specified in varargin
 elseif  any(strcmp(varargin, 'wavelength'))
 
