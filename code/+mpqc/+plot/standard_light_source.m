@@ -50,8 +50,18 @@ function varargout = standard_light_source(dirToSearch)
             continue
         end
         fprintf('.')
-        % Log gain and mean pixel values
-        PMT_gain(jj) = metadata.gains(1);
+
+        % Log gain and mean pixel values. Some gains may be zero if that channel
+        % did not exist. We get rid of these. Otherwise they must all be the same,
+        % because that is how the record function operates. Test for this anyway.
+        tGains = metadata.gains((metadata.gains>0));
+
+        if ~all(tGains==tGains(1))
+            fprintf('Warning gains are not the same on all detectors:')
+            disp(tGains)
+        end
+
+        PMT_gain(jj) = tGains(1);
         mean_value(jj,:) = squeeze(mean(imstack,[1,2]));
     end
     fprintf('\n')
@@ -61,11 +71,10 @@ function varargout = standard_light_source(dirToSearch)
         return
     end
 
-    % Plot!
+    % Plot
     % Make a new figure or return a plot handle as appropriate
     fig = mpqc.tools.returnFigureHandleForFile([dirToSearch,mfilename]);
     offset_subtracted = mean_value-mean_value(1,:);
-
     p=plot(offset_subtracted,'o-','MarkerSize',5);
 
     % Because ...'MarkerFaceColor','auto'... didn't do what was expected.
@@ -77,7 +86,7 @@ function varargout = standard_light_source(dirToSearch)
 
     set(gca,'XTickLabels',PMT_gain)
     xlabel('Gain')
-    ylabel('Signal (AU relative to zero gain)')
+    ylabel('Mean signal (AU relative to zero gain)')
     grid on
 
 
