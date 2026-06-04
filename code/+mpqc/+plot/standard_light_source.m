@@ -28,16 +28,22 @@ function varargout = standard_light_source(dirToSearch)
         return
     end
 
-    % get the number PMT channels by looking at the first file in the list
-    m = imfinfo(fullfile(dirToSearch,files(1).name)); % length == num chans
+    % get the number of saved channels from the first file
+    fname = fullfile(dirToSearch,files(1).name);
+    metadata=sibridge.readTifHeader(fname);
+    nChans = length(metadata.channelSave);
 
     PMT_gain = zeros(1,length(files));
-    mean_value = zeros(length(files),length(m));
+    mean_value = zeros(length(files),nChans);
 
     fprintf('Loading data')
     for jj = 1:length(files)
         fname = fullfile(dirToSearch,files(jj).name);
         [imstack,metadata] = mpqc.tools.scanImage_stackLoad(fname,false);
+
+        % It is possible the user recorded many frames for each channel.
+        % If so, we don't need this. We keep only the first frame from each
+        imstack = imstack(:,:,1:nChans);
 
         % Fail gracefully if the file could not be loaded
         if isempty(imstack)
