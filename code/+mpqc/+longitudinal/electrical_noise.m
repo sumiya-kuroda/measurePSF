@@ -111,22 +111,33 @@ for q = 1:size(noiseData,4) % each date
     end
 end
 
-for ii = 1:size(noiseData,3) % plotting FWHM and max value over time for each PMT
-    xlabels = {plotting_template.date};
-    fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
-    subplot(2,1,1)
-    plot(maxVal(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('Max value')
+fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
+xlabels = {plotting_template.date};
 
-    subplot(2,1,2)
-    plot(fwhm(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('FWHM')
-    sgtitle(['PMT # ',num2str(ii)])
+subplot(2,1,1)
+hold on
+for ii = 1:size(noiseData,3) % plotting FWHM and max value over time for each PMT    
+    plot(maxVal(ii,:), 'DisplayName', sprintf('PMT %d', ii))
 end
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('Max value')
+legend
+
+subplot(2,1,2)
+hold on
+for ii = 1:size(noiseData,3)
+    plot(fwhm(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+end
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('FWHM')
+legend
+
+sgtitle('Electrical noise')
+
 
 
 % Output of the main function
