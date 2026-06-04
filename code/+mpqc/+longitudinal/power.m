@@ -101,6 +101,7 @@ if isequal(plotting_template(:).wavelength)
     title('Percent power at 100mW')
     xlabels = {plotting_template.date};
     xticks(1:length(xlabels))
+    xticklabels(xlabels)
     ylabel('Percent power')
 
 % If you only want to plot one measured wavelength, specified in varargin
@@ -114,33 +115,46 @@ elseif  any(strcmp(varargin, 'wavelength'))
         if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelength)
             a=a+1;
             powerData(a) = load(plotting_template(ii).full_path_to_data);
-            maxPower(a) = powerData(a).powerMeasurements.observedPower_mW(end);
+            power = mean(powerData(a).powerMeasurements.observedPower_mW');
+            maxPower(a) = power(end);
             waveDate(a) = plotting_template(ii).date;
+            percentAt100mW(a) = interp1(power,powerData(a).powerMeasurements.powerSeriesPercent,100);
+
            
             
             hold on
-            subplot(2,1,1)
+            subplot(3,1,1)
             plot(linspace(0,100,length(powerData(a).powerMeasurements.observedPower_mW)),mean(powerData(a).powerMeasurements.observedPower_mW,2),'.')
             legend(waveDate(:),'location', 'Northwest')
             title(cell2mat(['Power at ', string(wavelength), 'nm']))
             xlabel('Percent power')
             ylabel('Power (mW)')
             hold off
-        else
-            % if varargin wavelength is not found
-            disp('No measurements found for provided wavelength')
+
         end
         
     end
 
+    if ~exist('powerData', 'var')
+        disp('No measurements found for provided wavelength')
+    end
+
     if exist('maxPower','var') % Only plots is varargin wavelength is present
-        subplot(2,1,2)
+        subplot(3,1,2)
         plot(maxPower, '-*')
         title('Maximum laser power')
         xlabels = waveDate(:);
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Maximum power (mW)')
+
+        subplot(3,1,3)
+        plot(percentAt100mW)
+        title('Percent power at 100mW')
+        xlabels = {plotting_template.date};
+        xticks(1:length(xlabels))
+        xticklabels(xlabels)
+        ylabel('Percent power')
     end
 
 % If multiple wavelengths have been recorded
@@ -161,12 +175,14 @@ else
                 % If power data is found, load it and find max value
                 a=a+1;
                 powerData(a,jj) = load(plotting_template(ii).full_path_to_data);
-                maxPower(a,jj) = powerData(a,jj).powerMeasurements.observedPower_mW(end);
+                power = mean(powerData(a,jj).powerMeasurements.observedPower_mW');
+                maxPower(a,jj) = power(end);
                 waveDate(a,jj) = plotting_template(ii).date;
+                percentAt100mW(a,jj) = interp1(power,powerData(a,jj).powerMeasurements.powerSeriesPercent,100);
 
 
                 hold on
-                subplot(2,1,1)
+                subplot(3,1,1)
                 plot(linspace(0,100,length(powerData(a,jj).powerMeasurements.observedPower_mW)),mean(powerData(a,jj).powerMeasurements.observedPower_mW,2),'.')
                 legend(waveDate(:,jj),'location', 'Northwest')
                 title(cell2mat(['Power at ', string(wavelengthVals(jj)), 'nm']))
@@ -175,13 +191,21 @@ else
                 hold off
             end
         end
-        subplot(2,1,2)
+        subplot(3,1,2)
         plot(maxPower(:,jj), '-*')
         title('Maximum laser power')
         xlabels = waveDate(:,jj);
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Maximum power (mW)')
+
+        subplot(3,1,3)
+        plot(percentAt100mW(:,jj))
+        title('Percent power at 100mW')
+        xlabels = {plotting_template.date};
+        xticks(1:length(xlabels))
+        xticklabels(xlabels)
+        ylabel('Percent power')
     end
 end
 
