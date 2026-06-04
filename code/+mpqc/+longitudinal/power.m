@@ -216,6 +216,7 @@ if nargout>0
     out.date ={plotting_template(:).date};
     out.powerData = powerData;
     out.maxPower = maxPower;
+    out.percentAt100mW = percentAt100mW;
     out.wavelength = {plotting_template(:).wavelength};
     varargout{1} = out;
 end
