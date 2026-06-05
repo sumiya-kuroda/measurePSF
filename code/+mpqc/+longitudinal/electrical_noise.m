@@ -82,15 +82,17 @@ for q = 1:size(noiseData,4) % each date
 
         % Extract data
         t_im = noiseData(:,:,t,q);
-        [n,x] = hist(t_im(:),100); % plots all data as histogram
-        m = smoothdata(n,'gaussian',5);
-        detail = interp1(x,m,[1:1000]);
+        % [n,x] = hist(t_im(:),100); % plots all data as histogram
+        % m = smoothdata(n,'gaussian',5);
+        % detail = interp1(x,m,[1:1000]);
 
-        maxVal(t,q) = max(detail(:));
-        halfMaxVal = maxVal(t,q)/2;
-        leftIndex = find(detail(:) >= halfMaxVal, 1, 'first');
-        rightIndex = find(detail(:) >= halfMaxVal, 1, 'last');
-        fwhm(t,q) = rightIndex -leftIndex;
+        maxVal(t,q) = max(t_im(:));
+        meanVal(t,q) = mean(t_im(:));
+        im_2SD(t,q) = std(t_im(:))*2;
+        % halfMaxVal = maxVal(t,q)/2;
+        % leftIndex = find(detail(:) >= halfMaxVal, 1, 'first');
+        % rightIndex = find(detail(:) >= halfMaxVal, 1, 'last');
+        % fwhm(t,q) = rightIndex -leftIndex;
 
         % TODO Remove data where PMT does not exist
 
@@ -111,29 +113,58 @@ for q = 1:size(noiseData,4) % each date
     end
 end
 
-for ii = 1:size(noiseData,3) % plotting FWHM and max value over time for each PMT
-    xlabels = {plotting_template.date};
-    fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
-    subplot(2,1,1)
-    plot(maxVal(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('Max value')
+fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
+xlabels = {plotting_template.date};
 
-    subplot(2,1,2)
-    plot(fwhm(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('FWHM')
-    sgtitle(['PMT # ',num2str(ii)])
+subplot(3,1,1)
+hold on
+for ii = 1:size(noiseData,3) % plotting max value over time for each PMT    
+    plot(maxVal(ii,:), 'DisplayName', sprintf('PMT %d', ii))
 end
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('Max value')
+legend
+
+subplot(3,1,2)
+hold on
+for ii = 1:size(noiseData,3)
+    % plot(fwhm(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+    plot(im_2SD(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+
+end
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('Two SD')
+ylabel('Pixel value')
+legend
+
+subplot(3,1,3)
+hold on
+for ii = 1:size(noiseData,3)
+    % plot(fwhm(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+    plot(meanVal(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+
+end
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('Mean pixel value')
+ylabel('Pixel value')
+legend
+
+sgtitle('Electrical noise')
+
 
 
 % Output of the main function
 if nargout>0
     out.fileName = {plotting_template(:).name};
     out.noiseData = noiseData;
-    out.fwhm = fwhm;
+    % out.fwhm = fwhm;
+    out.twoSD = im_2SD; 
     out.maxValues = maxVal;
     out.date ={plotting_template(:).date};
     varargout{1} = out;
