@@ -14,10 +14,6 @@ function varargout = electrical_noise(data_dir,varargin)
 % Outputs
 % out (optional) - structure containing key information and data.
 %
-% Notes
-% Currently plots for 4 PMT channels regardless of actual number of
-% PMTs in system
-%
 %
 % Isabell Whiteley, SWC AMF 2025
 
@@ -28,7 +24,7 @@ end
 
 debugPlots = false;
 
-maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif')); 
+maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
@@ -82,19 +78,10 @@ for q = 1:size(noiseData,4) % each date
 
         % Extract data
         t_im = noiseData(:,:,t,q);
-        % [n,x] = hist(t_im(:),100); % plots all data as histogram
-        % m = smoothdata(n,'gaussian',5);
-        % detail = interp1(x,m,[1:1000]);
 
         maxVal(t,q) = max(t_im(:));
         meanVal(t,q) = mean(t_im(:));
         im_2SD(t,q) = std(t_im(:))*2;
-        % halfMaxVal = maxVal(t,q)/2;
-        % leftIndex = find(detail(:) >= halfMaxVal, 1, 'first');
-        % rightIndex = find(detail(:) >= halfMaxVal, 1, 'last');
-        % fwhm(t,q) = rightIndex -leftIndex;
-
-        % TODO Remove data where PMT does not exist
 
         % Optionally plot
         if debugPlots
@@ -118,9 +105,10 @@ xlabels = {plotting_template.date};
 
 subplot(3,1,1)
 hold on
-for ii = 1:size(noiseData,3) % plotting max value over time for each PMT    
+for ii = 1:size(noiseData,3) % plotting max value over time for each PMT
     plot(maxVal(ii,:), 'DisplayName', sprintf('PMT %d', ii))
 end
+
 hold off
 xticks(1:length(xlabels))
 xticklabels(xlabels)
@@ -130,10 +118,9 @@ legend
 subplot(3,1,2)
 hold on
 for ii = 1:size(noiseData,3)
-    % plot(fwhm(ii,:),  'DisplayName', sprintf('PMT %d', ii))
     plot(im_2SD(ii,:),  'DisplayName', sprintf('PMT %d', ii))
-
 end
+
 hold off
 xticks(1:length(xlabels))
 xticklabels(xlabels)
@@ -144,10 +131,9 @@ legend
 subplot(3,1,3)
 hold on
 for ii = 1:size(noiseData,3)
-    % plot(fwhm(ii,:),  'DisplayName', sprintf('PMT %d', ii))
     plot(meanVal(ii,:),  'DisplayName', sprintf('PMT %d', ii))
-
 end
+
 hold off
 xticks(1:length(xlabels))
 xticklabels(xlabels)
@@ -163,8 +149,7 @@ sgtitle('Electrical noise')
 if nargout>0
     out.fileName = {plotting_template(:).name};
     out.noiseData = noiseData;
-    % out.fwhm = fwhm;
-    out.twoSD = im_2SD; 
+    out.twoSD = im_2SD;
     out.maxValues = maxVal;
     out.date ={plotting_template(:).date};
     varargout{1} = out;
