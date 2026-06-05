@@ -1,5 +1,6 @@
 function varargout = standard_light_source(data_dir,varargin)
-% Plots showing photon count of PMTs over time
+% Plots showing mean pixel value recorded from a standard light source over
+% time
 %
 %
 %
@@ -51,20 +52,22 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     plotting_template = plotting_template(startIndex:end);
 end
 
+
+% TO DO read meta data to determine number of PMTs/num channels saved - only load that number
+% of frames
+
 for ii = 1:length(plotting_template)
     if contains(plotting_template(ii).full_path_to_data, '.tif')
-        stdLight(:,:,:,ii) = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data); % (x,y,pmt,file)
+       [data,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
+       numChannels = metaData.channelSave;
+       gain = metaData.gains;
+       for jj = 1:length(numChannels)
+        meanValue(jj,ii) = squeeze(mean(data(:,:,jj),'all')); % (pixelValue,pmt,file)
+       end
     end
 end
-
-% % TO DO
-% Read variables from title
-% Check standard light source serial number is same
-% Separate by colour
-% 
-% OR 
-% 
-% Do we take the photon count analysis only?
+ figure; plot(meanValue)
+% find mean value at max gain
 
 disp('done')
 
