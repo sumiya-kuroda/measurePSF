@@ -1,6 +1,19 @@
 function varargout = standard_light_source(data_dir,varargin)
 % Plots showing mean pixel value recorded from a standard light source over
-% time
+% time at the maximum gain recorded. 
+%
+% mpqc.longitudinal.standard_light_source(maintenace_folder_path, varargin)
+% Optional inputs: Starting date- year-month-day
+% mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-01')
+%
+% Purpose
+% Plots of the mean pixel value of each PMT when recording a standard light
+% source. A decrease in pixel value over time suggestuions a deterioration
+% of the PMT
+%
+%
+% Outputs
+% out (optional) - structure containing key information and data.
 %
 %
 %
@@ -14,7 +27,7 @@ end
 
 debugPlots = true;
 
-maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif')); 
+maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
@@ -42,7 +55,7 @@ date_list = [plotting_template.date];
 [~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
 plotting_template = plotting_template(order);
 
-if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date   
+if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date
     idx = find(strcmp(varargin, 'startDate'), 1);  % first match
     startDate = datetime(varargin{idx + 1});
     startIndex = 1;
@@ -54,13 +67,10 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     plotting_template = plotting_template(startIndex:end);
 end
 
-    % gains = regexp(plotting_template.name,'(\d+)[vV]', 'tokens');
-    % gainsUsed = str2double(tokens{1}{1});
-    maxGain = max([plotting_template.gainsUsed]);
+
+maxGain = max([plotting_template.gainsUsed]);
 plotting_template_max = plotting_template([plotting_template.gainsUsed] == maxGain);
 
-% TO DO read meta data to determine number of PMTs/num channels saved - only load that number
-% of frames
 
 for ii = 1:length(plotting_template_max) % each date
     if contains(plotting_template_max(ii).full_path_to_data, '.tif')
@@ -69,10 +79,10 @@ for ii = 1:length(plotting_template_max) % each date
 
         %save only first frame of each channel
         data = data(:,:,1:numChannels);
-     
+
         for jj = 1:numChannels % each PMT
-         meanValue(jj,ii) = mean(data(:,:,jj),'all'); % (pixelValue,pmt,file)
-         % need to put Nan if PMTs are missing. Currently lists 0
+            meanValue(jj,ii) = mean(data(:,:,jj),'all'); % (pixelValue,pmt,file)
+            % need to put Nan if PMTs are missing. Currently lists 0
         end
 
     end
@@ -85,21 +95,6 @@ ylabel('Mean pixel value')
 xticks(1:length(xlabels))
 xticklabels(xlabels)
 legend(metaData.channelName(metaData.channelSave),'Location','NorthWest')
-
-% find mean value at max gain
-
-disp('done')
-
-
-
-
-
-
-
-
-
-
-
 
 
 end

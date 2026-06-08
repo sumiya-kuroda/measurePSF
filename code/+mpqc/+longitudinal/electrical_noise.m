@@ -6,9 +6,9 @@ function varargout = electrical_noise(data_dir,varargin)
 % mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-01')
 %
 % Purpose
-% Plots of the maximum value and FWHM of electrical noise for each channel
-% with PMTs off. If there is significant change in electrical noise, the FWHM
-% distributions will likely increase in value.
+% Plots of the pixel value at two standard deviations of electrical noise for each channel
+% with PMTs off. If there is significant change in electrical noise, the
+% pixel value will increase. 
 %
 %
 % Outputs
