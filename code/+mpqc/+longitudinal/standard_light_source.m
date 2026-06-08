@@ -26,6 +26,8 @@ for ii=1:length(maintenanceFiles)
         plotting_template(n).plotting_func = @mpqc.plot.standard_light_source;
         plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
+        gains = regexp(plotting_template(n).name,'(\d+)[vV]', 'tokens');
+        plotting_template(n).gainsUsed = str2double(gains{1}{1});
         n=n+1;
     end
 end
@@ -52,21 +54,38 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     plotting_template = plotting_template(startIndex:end);
 end
 
+    % gains = regexp(plotting_template.name,'(\d+)[vV]', 'tokens');
+    % gainsUsed = str2double(tokens{1}{1});
+    maxGain = max([plotting_template.gainsUsed]);
+plotting_template_max = plotting_template([plotting_template.gainsUsed] == maxGain);
 
 % TO DO read meta data to determine number of PMTs/num channels saved - only load that number
 % of frames
 
-for ii = 1:length(plotting_template)
-    if contains(plotting_template(ii).full_path_to_data, '.tif')
-       [data,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
-       numChannels = metaData.channelSave;
-       gain = metaData.gains;
-       for jj = 1:length(numChannels)
-        meanValue(jj,ii) = squeeze(mean(data(:,:,jj),'all')); % (pixelValue,pmt,file)
-       end
+for ii = 1:length(plotting_template_max) % each date
+    if contains(plotting_template_max(ii).full_path_to_data, '.tif')
+        [data,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template_max(ii).full_path_to_data);
+        numChannels = length(metaData.channelSave);
+
+        %save only first frame of each channel
+        data = data(:,:,1:numChannels);
+     
+        for jj = 1:numChannels % each PMT
+         meanValue(jj,ii) = mean(data(:,:,jj),'all'); % (pixelValue,pmt,file)
+         % need to put Nan if PMTs are missing. Currently lists 0
+        end
+
     end
+
 end
- figure; plot(meanValue)
+figure; plot(meanValue')
+xlabels = {plotting_template_max.date};
+title('Mean pixel value at max gain')
+ylabel('Mean pixel value')
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+legend(metaData.channelName(metaData.channelSave),'Location','NorthWest')
+
 % find mean value at max gain
 
 disp('done')
@@ -91,4 +110,5 @@ out.type = [];
 out.plotting_func = [];
 out.name = [];
 out.date = [];
+out.gainsUsed = [];
 end
