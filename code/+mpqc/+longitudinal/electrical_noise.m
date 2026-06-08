@@ -103,19 +103,8 @@ end
 fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
 xlabels = {plotting_template.date};
 
-subplot(3,1,1)
-hold on
-for ii = 1:size(noiseData,3) % plotting max value over time for each PMT
-    plot(maxVal(ii,:), 'DisplayName', sprintf('PMT %d', ii))
-end
 
-hold off
-xticks(1:length(xlabels))
-xticklabels(xlabels)
-title('Max value')
-legend
-
-subplot(3,1,2)
+figure
 hold on
 for ii = 1:size(noiseData,3)
     plot(im_2SD(ii,:),  'DisplayName', sprintf('PMT %d', ii))
@@ -127,22 +116,6 @@ xticklabels(xlabels)
 title('Two SD')
 ylabel('Pixel value')
 legend
-
-subplot(3,1,3)
-hold on
-for ii = 1:size(noiseData,3)
-    plot(meanVal(ii,:),  'DisplayName', sprintf('PMT %d', ii))
-end
-
-hold off
-xticks(1:length(xlabels))
-xticklabels(xlabels)
-title('Mean pixel value')
-ylabel('Pixel value')
-legend
-
-sgtitle('Electrical noise')
-
 
 
 % Output of the main function
