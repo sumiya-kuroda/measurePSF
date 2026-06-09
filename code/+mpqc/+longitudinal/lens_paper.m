@@ -6,7 +6,7 @@ function varargout = lens_paper(data_dir,varargin)
 % mpqc.longitudinal.lens_paper(maintenace_folder_path, '2024-06-01')
 %
 % Purpose
-%  
+%
 %
 %
 % Outputs
@@ -32,7 +32,9 @@ for ii=1:length(maintenanceFiles)
         plotting_template(n) = generic_generator_template(tmp);
         plotting_template(n).type = 'lens_paper';
         plotting_template(n).plotting_func = @mpqc.plot.lens_paper;
-        plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
+        plotting_template(n).wavelength = str2num(cell2mat(regexp(tmp.name,'\d*(?=nm)','match')));
+        plotting_template(n).power = str2num(cell2mat(regexp(tmp.name,'\d*(?=mW)','match')));
+        plotting_template(n).date = datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss');
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
         n=n+1;
     end
@@ -45,7 +47,7 @@ end
 
 % sort plotting_template data by the date/time
 date_list = [plotting_template.date];
-[~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
+[~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
 if nargin > 1 % Optional variable for selecting starting date
@@ -59,16 +61,76 @@ if nargin > 1 % Optional variable for selecting starting date
     plotting_template = plotting_template(startIndex:end);
 end
 
-for ii = 1:length(plotting_template)
-    if contains(plotting_template(ii).full_path_to_data, '.tif')
-        lensPaper(:,:,:,ii) = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
+% If only one wavelength is measured and the power is within 20mW
+if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) - min([plotting_template.power]) <= 20
+    for ii = 1:length(plotting_template)
+        if contains(plotting_template(ii).full_path_to_data, '.tif')
+
+            % calculate photons per pixel
+            out(ii) = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data);
+            photonsPerPixel(ii) = out(ii).mean_photons_per_pixel;
+        end
     end
+    plot(photonsPerPixel)
+    xlabels = string({plotting_template.date});
+    xticks(1:length(xlabels))
+    xticklabels(xlabels)
+    title('Photons per Pixel')
+    ylabel('Photons')
+
+else
+    % Group measurements by power withiin 20mW
+    [sortedPower, sortIdx] = sort([plotting_template.power]);
+
+    groups = {};
+    currentGroup = sortIdx(1);
+    groupMin = sortedPower(1);
+
+    for k = 2:numel(sortedPower)
+        if sortedPower(k) - groupMin <= 20
+            currentGroup(end+1) = sortIdx(k);
+        else
+            groups{end+1} = currentGroup;
+            currentGroup = sortIdx(k);
+            groupMin = sortedPower(k);
+        end
+    end
+    groups{end+1} = currentGroup;
+
+    figure
+    hold on
+    legendLabels = cell(1,numel(groups));
+    for g = 1:numel(groups)
+        idx = groups{g};
+        groupPowers = [plotting_template(idx).power];
+
+        legendLabels{g} = sprintf('Power between  %g-%g mW', ...
+            min(groupPowers), max(groupPowers));
+        photonsPerPixel = nan(1,length(plotting_template));
+        for ii = 1:length(idx)
+            out = mpqc.analyse.get_quantalsize_from_file( ...
+                plotting_template(idx(ii)).full_path_to_data);
+            photonsPerPixel(idx(ii)) = out.mean_photons_per_pixel;
+        end
+
+        plot(photonsPerPixel)
+    end
+
+    hold off
+    xlabels = string({plotting_template.date});
+    xticks(1:length(xlabels))
+    xticklabels(xlabels)
+    % legend
+    legend(legendLabels,'Location','northeast')
+    title('Photons per Pixel')
+    ylabel('Photons')
+
+
+    % TO DO If more than one wavelength has been used
+
 end
-a 
+
 end
-
-
-
 
 
 function out = generic_generator_template(t_dir)
@@ -77,4 +139,6 @@ out.type = [];
 out.plotting_func = [];
 out.name = [];
 out.date = [];
+out.wavelength = [];
+out.power = [];
 end
