@@ -128,6 +128,12 @@ else
 
     % TO DO If more than one wavelength has been used
 
+    if nargout>0
+        out.fileName = {plotting_template(:).name};
+        out.photonsPerPixel = photonsPerPixel;
+        out.date ={plotting_template(:).date};
+        varargout{1} = out;
+    end
 end
 
 end

@@ -96,6 +96,12 @@ xticks(1:length(xlabels))
 xticklabels(xlabels)
 legend(metaData.channelName(metaData.channelSave),'Location','NorthWest')
 
+if nargout>0
+    out.fileName = {plotting_template(:).name};
+    out.meanValue = meanValue;
+    out.date ={plotting_template(:).date};
+    varargout{1} = out;
+end
 
 end
 
