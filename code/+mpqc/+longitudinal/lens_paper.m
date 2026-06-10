@@ -67,8 +67,8 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
         if contains(plotting_template(ii).full_path_to_data, '.tif')
 
             % calculate photons per pixel
-            out(ii) = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data);
-            photonsPerPixel(ii) = out(ii).mean_photons_per_pixel;
+            data(ii) = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data);
+            photonsPerPixel(ii) = data(ii).mean_photons_per_pixel;
         end
     end
     plot(photonsPerPixel)
@@ -100,20 +100,21 @@ else
     figure
     hold on
     legendLabels = cell(1,numel(groups));
+    photonsPerPixel = cell(1,numel(groups));
     for g = 1:numel(groups)
         idx = groups{g};
         groupPowers = [plotting_template(idx).power];
 
         legendLabels{g} = sprintf('Power between  %g-%g mW', ...
             min(groupPowers), max(groupPowers));
-        photonsPerPixel = nan(1,length(plotting_template));
+        photonsPerPixel{g} = nan(1,length(plotting_template));
         for ii = 1:length(idx)
-            out = mpqc.analyse.get_quantalsize_from_file( ...
+            data = mpqc.analyse.get_quantalsize_from_file( ...
                 plotting_template(idx(ii)).full_path_to_data);
-            photonsPerPixel(idx(ii)) = out.mean_photons_per_pixel;
+            photonsPerPixel{g}(idx(ii)) = data.mean_photons_per_pixel;
         end
 
-        plot(photonsPerPixel)
+        plot(photonsPerPixel{g})
     end
 
     hold off
