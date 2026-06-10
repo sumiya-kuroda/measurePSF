@@ -40,7 +40,7 @@ for ii=1:length(maintenanceFiles)
     end
 end
 if ~exist('plotting_template','var')
-    disp('No electrical noise files found')
+    disp('No lens paper files found')
     varargout{1} = [];
     return
 end
