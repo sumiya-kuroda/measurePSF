@@ -1,9 +1,12 @@
 
 # Change-Log
 
+### 2026/06/23
+ * Prompts to edit default fields in YAML. More graceful failure if YAML is broken.
+ * Bugfix so microscope name returned without funny characters.
+ * `mpqc.settings.findSettingsFile` with no output argument now prints the settings-file path.
 
-
-### 2026/04/33
+### 2026/04/23
  * Fix typo that was causing numGains to not work for record.lens_paper
 
 
