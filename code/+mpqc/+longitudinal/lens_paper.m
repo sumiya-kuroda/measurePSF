@@ -133,6 +133,7 @@ else
         out.fileName = {plotting_template(:).name};
         out.photonsPerPixel = photonsPerPixel;
         out.date ={plotting_template(:).date};
+        out.powerRanges = legendLabels;
         varargout{1} = out;
     end
 end
