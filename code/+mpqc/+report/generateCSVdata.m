@@ -1,4 +1,4 @@
-function out=generateCSVdata(data_dir)
+function generateCSVdata(data_dir)
 % Creates machine readable data for html dashboard
 %
 %
@@ -6,49 +6,55 @@ function out=generateCSVdata(data_dir)
 % debugging check
 maintenanceFiles = [dir(fullfile(data_dir,'\**\*.tif')) ; dir(fullfile(data_dir,'\**\*.mat'))];
 
+% Note what figures are open by user
+figsBefore = findall(groot,'Type','figure');
+
 en = mpqc.longitudinal.electrical_noise(data_dir);
 if isempty(en)
     disp('No electrical noise data')
 else
-    out.electrical_noise = en.twoSD;
-    out.enDate = en.date;
+    m = size(en.twoSD, 1);
+    varNames = cellstr("PMT" + (1:m));
+    electrical_noise = array2table(en.twoSD',  'VariableNames', varNames);
+    electrical_noise = addvars(electrical_noise, string(en.date(:)),'Before', 1,'NewVariableNames', 'Date');
+    outfile = fullfile(data_dir, 'electrical_noise_dashboard.csv');
+    writetable(electrical_noise, outfile);
 end
 
 pow = mpqc.longitudinal.power(data_dir);
 if isempty(pow)
     disp('No power data')
 else
-    out.maxPower = pow.maxPower;
-    out.percentAt100mW = pow.percentAt100mW;
-    out.powerDate = pow.date;
+    power = table(pow.date', pow.maxPower',pow.percentAt100mW', 'VariableNames',{'Date','MaxPower','PercentAt100mW'});
+    outfile = fullfile(data_dir, 'power_dashboard.csv');
+    writetable(power, outfile);
 end
-% out.wavelength = {plotting_template(:).wavelength};
+
 
 stdLight = mpqc.longitudinal.standard_light_source(data_dir);
 if isempty(stdLight)
     disp('No standard light source data')
 else
-    out.meanValue = stdLight.meanValue;
-    out.stdLightDate = stdLight.date;
+    stdLightSource = table(stdLight.maxDate',stdLight.meanValue');
+    outfile = fullfile(data_dir, 'standard_light_dashboard.csv');
+    writetable(stdLightSource, outfile);
 end
 
 photons = mpqc.longitudinal.lens_paper(data_dir);
 if isempty(photons)
     disp('No photon counting data')
 else
-    out.photonsPerPixel = photons.photonsPerPixel;
+    powerRange = numel(photons.photonsPerPixel);
+    data = cell2mat(cellfun(@(x) x(:), photons.photonsPerPixel, 'UniformOutput', false));
+    photonsPerPixel = array2table(data, 'VariableNames', photons.powerRanges);
+    photonsPerPixel = addvars(photonsPerPixel, datetime([photons.date{:}])', 'Before', 1, 'NewVariableNames', 'Date');
+    outfile = fullfile(data_dir, 'photons_perpixel_dashboard.csv');
+    writetable(photonsPerPixel, outfile);
 end
 
-
-csvData = struct2table(out,'AsArray',true);
-csvData = rows2vars(splitvars(csvData));
-outfile = fullfile(data_dir,'dashboardData.csv');
-writetable(csvData,outfile)
-
-
-% function out = generic_generator_template(data_dir)
-% out.electrical_noise = [];
-% out.maxPower = [];
-% out.percentAt100mW = [];
+% closes any figures opened by code
+figsAfter = findall(groot,'Type','figure');
+newFigs = setdiff(figsAfter, figsBefore);
+delete(newFigs)
 
 
