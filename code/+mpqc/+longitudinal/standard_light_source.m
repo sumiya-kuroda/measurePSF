@@ -100,6 +100,7 @@ if nargout>0
     out.fileName = {plotting_template(:).name};
     out.meanValue = meanValue;
     out.date ={plotting_template(:).date};
+    out.maxDate = {plotting_template_max(:).date};
     varargout{1} = out;
 end
 
