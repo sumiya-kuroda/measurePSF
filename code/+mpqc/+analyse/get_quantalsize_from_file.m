@@ -1,4 +1,4 @@
-function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_gamma)
+function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_gamma,skipStandardSource)
 	% Get the quantal size and associated statistics from a file
 	%
 	% function OUT = mpqc.analyse.get_quantalsize_quantalsize_from_file(fname,count_weight_gamma)
@@ -13,6 +13,7 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 	% Inputs
 	% fname - relate or absolute path to a file
 	% count_weight_gamma - see help of  mpqc.analyse.compute_quantalsize
+    % skipStandardSource - [optional] if true, do not search for standard lightsource files
 	%
 	% Output
 	% Structure with extensive data on the recording and also the quantal size and offset.
@@ -32,12 +33,17 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 
 	if nargin<2
 		count_weight_gamma = [];
-	end
+    end
+
+    if nargin<3 
+        skipStandardSource = false;
+    end
 
 	if ~exist(fname,'file')
 		fprintf('Can not find file %s\n',fname)
 		return
 	end
+    
 
 	[im,metadata]=mpqc.tools.scanImage_stackLoad(fname,false); %Do not subtract the offset
 
@@ -45,7 +51,11 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 
 	pathToFile = fileparts(fname);
 
-	ssFiles = getStandardSourceFiles(pathToFile);
+	% ssFiles = getStandardSourceFiles(pathToFile);
+    ssFiles = {};
+    if ~skipStandardSource
+        ssFiles = getStandardSourceFiles(pathToFile);
+    end
 
 	for ii=1:nChans
 		% Run the analysis
@@ -64,7 +74,7 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 
 		% Find and fit standard source if present
 		t_ssFiles = ssFiles(contains(ssFiles,sprintf('_%dV_',OUT(ii).gain)));
-		if ~isempty(t_ssFiles)
+		if ~isempty(t_ssFiles) && ~skipStandardSource
 			OUT(ii).standard_source_results = convert_standardSource(t_ssFiles,OUT(ii));
 		end
 	end
