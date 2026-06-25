@@ -9,6 +9,7 @@ maintenanceFiles = [dir(fullfile(data_dir,'\**\*.tif')) ; dir(fullfile(data_dir,
 % Note what figures are open by user
 figsBefore = findall(groot,'Type','figure');
 
+disp('Searching for electrical noise data')
 en = mpqc.longitudinal.electrical_noise(data_dir);
 if isempty(en)
     disp('No electrical noise data')
@@ -21,6 +22,7 @@ else
     writetable(electrical_noise, outfile);
 end
 
+disp('Searching for power data')
 pow = mpqc.longitudinal.power(data_dir);
 if isempty(pow)
     disp('No power data')
@@ -30,7 +32,7 @@ else
     writetable(power, outfile);
 end
 
-
+disp('Searching for standard light source data')
 stdLight = mpqc.longitudinal.standard_light_source(data_dir);
 if isempty(stdLight)
     disp('No standard light source data')
@@ -40,6 +42,7 @@ else
     writetable(stdLightSource, outfile);
 end
 
+disp('Searching for photon counting data')
 photons = mpqc.longitudinal.lens_paper(data_dir);
 if isempty(photons)
     disp('No photon counting data')
