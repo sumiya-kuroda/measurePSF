@@ -43,7 +43,7 @@ else
 end
 
 disp('Searching for photon counting data')
-photons = mpqc.longitudinal.lens_paper(data_dir);
+photons = mpqc.longitudinal.lens_paper(data_dir,true);
 if isempty(photons)
     disp('No photon counting data')
 else
