@@ -1,13 +1,13 @@
 function varargout = power(data_dir,varargin)
 % Function to track the changes in laser power over time
 %
-% mpqc.longitudinal.power(maintenace_folder_path, varargin)
+% mpqc.longitudinal.power(maintenance_folder_path, varargin)
 %
 % Optional inputs:
 % 'startDate', 'year-month-day'
-%  mpqc.longitudinal.power(maintenace_folder_path,'startDate','2024-06-01')
+%  mpqc.longitudinal.power(maintennace_folder_path,'startDate','2024-06-01')
 % 'wavelength', value
-%  mpqc.longitudinal.power(maintenace_folder_path,'wavelength',800)
+%  mpqc.longitudinal.power(maintenance_folder_path,'wavelength',800)
 %
 % Purpose
 % Plots the power at the objective from 0-100% and compares maximum output

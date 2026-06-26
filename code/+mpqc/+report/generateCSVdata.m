@@ -1,7 +1,15 @@
 function generateCSVdata(data_dir)
 % Creates machine readable data for html dashboard
 %
+% mpqc.report.generateCSVdata(maintenance_folder_path)
 %
+% Purpose-  outputs CSV files for longitudinal tracking of power,
+% electrical noise, standard light source data, and photon counting from
+% lens paper data
+% Will be used to generate files for an HTML dashboard
+%
+%
+% Isabell Whiteley, SWC AMF 2026
 
 % debugging check
 maintenanceFiles = [dir(fullfile(data_dir,'\**\*.tif')) ; dir(fullfile(data_dir,'\**\*.mat'))];
