@@ -2,6 +2,8 @@ function varargout = lens_paper(data_dir,varargin)
 % Longitudinal lens paper plots showing mean photons per pixel over time
 %
 % mpqc.longitudinal.lens_paper(maintenace_folder_path, varargin)
+%
+% Inputs (optional)
 % Optional inputs: Starting date- year-month-day
 % mpqc.longitudinal.lens_paper(maintenace_folder_path, '2024-06-01')
 %
@@ -40,6 +42,7 @@ for ii=1:length(maintenanceFiles)
         n=n+1;
     end
 end
+
 if ~exist('plotting_template','var')
     disp('No lens paper files found')
     varargout{1} = [];
@@ -51,32 +54,24 @@ date_list = [plotting_template.date];
 [~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
-% if nargin > 1 % Optional variable for selecting starting date
-%     startDate = datetime(varargin{1});
-%     startIndex = 1;
-% 
-%     while [plotting_template(startIndex).date] < startDate
-%         startIndex = startIndex + 1;
-%     end
-% 
-%     plotting_template = plotting_template(startIndex:end);
-% end
+
 if nargin > 1
-        for argInd = 1:length(varargin)
-            if islogical(varargin{argInd})
-                skipStandardSource = varargin{argInd};
-            else
-                startDate = datetime(varargin{argInd});
-            end
+    for argInd = 1:length(varargin)
+        if islogical(varargin{argInd})
+            skipStandardSource = varargin{argInd};
+        else
+            startDate = datetime(varargin{argInd});
         end
     end
-    if exist('startDate','var')
-        startIndex = 1;
-        while [plotting_template(startIndex).date] < startDate
-            startIndex = startIndex + 1;
-        end
-        plotting_template = plotting_template(startIndex:end);
+end
+
+if exist('startDate','var')
+    startIndex = 1;
+    while [plotting_template(startIndex).date] < startDate
+        startIndex = startIndex + 1;
     end
+    plotting_template = plotting_template(startIndex:end);
+end
 
 % If only one wavelength is measured and the power is within 20mW
 if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) - min([plotting_template.power]) <= 20
@@ -88,6 +83,7 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
             photonsPerPixel(ii) = data(ii).mean_photons_per_pixel;
         end
     end
+
     plot(photonsPerPixel)
     xlabels = string({plotting_template.date});
     xticks(1:length(xlabels))
@@ -96,7 +92,7 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
     ylabel('Photons')
 
 else
-    % Group measurements by power withiin 20mW
+    % Group measurements by power within 20mW
     [sortedPower, sortIdx] = sort([plotting_template.power]);
 
     groups = {};
@@ -138,13 +134,12 @@ else
     xlabels = string({plotting_template.date});
     xticks(1:length(xlabels))
     xticklabels(xlabels)
-    % legend
     legend(legendLabels,'Location','northeast')
     title('Photons per Pixel')
     ylabel('Photons')
 
 
-    % TO DO If more than one wavelength has been used
+    % TODO If more than one wavelength has been used
 
     if nargout>0
         out.fileName = {plotting_template(:).name};
@@ -159,11 +154,11 @@ end
 
 
 function out = generic_generator_template(t_dir)
-out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
-out.type = [];
-out.plotting_func = [];
-out.name = [];
-out.date = [];
-out.wavelength = [];
-out.power = [];
+    out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
+    out.type = [];
+    out.plotting_func = [];
+    out.name = [];
+    out.date = [];
+    out.wavelength = [];
+    out.power = [];
 end
