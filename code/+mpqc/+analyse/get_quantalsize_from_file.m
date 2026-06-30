@@ -35,7 +35,7 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 		count_weight_gamma = [];
     end
 
-    if nargin<3 
+    if nargin<3
         skipStandardSource = false;
     end
 
@@ -43,7 +43,7 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 		fprintf('Can not find file %s\n',fname)
 		return
 	end
-    
+
 
 	[im,metadata]=mpqc.tools.scanImage_stackLoad(fname,false); %Do not subtract the offset
 
@@ -51,7 +51,6 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 
 	pathToFile = fileparts(fname);
 
-	% ssFiles = getStandardSourceFiles(pathToFile);
     ssFiles = {};
     if ~skipStandardSource
         ssFiles = getStandardSourceFiles(pathToFile);
@@ -73,10 +72,13 @@ function [OUT,data] = get_quantalsize_quantalsize_from_file(fname,count_weight_g
 		OUT(ii).gain = mpqc.report.PMT_gain_from_fname(fname);
 
 		% Find and fit standard source if present
-		t_ssFiles = ssFiles(contains(ssFiles,sprintf('_%dV_',OUT(ii).gain)));
-		if ~isempty(t_ssFiles) && ~skipStandardSource
+		if ~isempty(ssFiles)
+			t_ssFiles = ssFiles(contains(ssFiles,sprintf('_%dV_',OUT(ii).gain)));
 			OUT(ii).standard_source_results = convert_standardSource(t_ssFiles,OUT(ii));
+		else
+			OUT(ii).standard_source_results = [];
 		end
+
 	end
 
 end
@@ -88,7 +90,7 @@ function ss_files = getStandardSourceFiles(tDir)
 	ss_files = fullfile({ss_files(:).folder},{ss_files(:).name});
 end
 
- 
+
 function ssResults = convert_standardSource(t_ssFiles,OUT)
 
 
