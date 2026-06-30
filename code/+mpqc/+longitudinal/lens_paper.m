@@ -109,10 +109,12 @@ else
     end
     groups{end+1} = currentGroup;
 
-    figure
-    hold on
+
+    fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
+
     legendLabels = cell(1,numel(groups));
     photonsPerPixel = cell(1,numel(groups));
+
     for g = 1:numel(groups)
         idx = groups{g};
         groupPowers = [plotting_template(idx).power];
@@ -127,6 +129,7 @@ else
         end
 
         plot(photonsPerPixel{g})
+        hold on
     end
 
     hold off

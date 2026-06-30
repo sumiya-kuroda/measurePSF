@@ -165,7 +165,8 @@ else
     numWavelength = length(wavelengthVals);
 
     for jj = 1:numWavelength
-        figure;
+        fig(jj) = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%d', mfilename,jj));
+
         a=0;
         for ii = 1:length(plotting_template)
 

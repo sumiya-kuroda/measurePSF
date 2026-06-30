@@ -86,7 +86,11 @@ for ii = 1:length(plotting_template_max) % each date
     end
 
 end
-figure; plot(meanValue')
+
+
+fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
+
+plot(meanValue')
 xlabels = {plotting_template_max.date};
 title('Mean pixel value at max gain')
 ylabel('Mean pixel value')
