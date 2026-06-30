@@ -1,4 +1,4 @@
-function generateCSVdata(data_dir)
+function generateDashboardData(data_dir)
 % Creates machine readable data for html dashboard
 %
 % mpqc.report.generateCSVdata(maintenance_folder_path)
