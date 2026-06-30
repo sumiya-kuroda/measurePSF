@@ -11,8 +11,6 @@ function generateDashboardData(data_dir)
 %
 % Isabell Whiteley, SWC AMF 2026
 
-% debugging check
-maintenanceFiles = [dir(fullfile(data_dir,'\**\*.tif')) ; dir(fullfile(data_dir,'\**\*.mat'))];
 
 % Note what figures are open by user
 figsBefore = findall(groot,'Type','figure');
