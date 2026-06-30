@@ -8,7 +8,7 @@ function varargout = electrical_noise(data_dir,varargin)
 % Purpose
 % Plots of the pixel value at two standard deviations of electrical noise for each channel
 % with PMTs off. If there is significant change in electrical noise, the
-% pixel value will increase. 
+% pixel value will increase.
 %
 %
 % Outputs
@@ -74,6 +74,7 @@ for q = 1:size(noiseData,4) % each date
     if debugPlots
         fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
     end
+
     for t = 1:size(noiseData,3) % each PMT
 
         % Extract data
@@ -103,8 +104,6 @@ end
 fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
 xlabels = {plotting_template.date};
 
-
-figure
 hold on
 for ii = 1:size(noiseData,3)
     plot(im_2SD(ii,:),  'DisplayName', sprintf('PMT %d', ii))
@@ -133,9 +132,9 @@ end % close main funtion
 
 
 function out = generic_generator_template(t_dir)
-out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
-out.type = [];
-out.plotting_func = [];
-out.name = [];
-out.date = [];
+    out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
+    out.type = [];
+    out.plotting_func = [];
+    out.name = [];
+    out.date = [];
 end
