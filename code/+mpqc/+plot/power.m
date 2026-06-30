@@ -25,7 +25,7 @@ measurements = []; % not needed if just using the loaded powerMeasurements
 if ~exist(fname,'file')
     fprintf('%s does not exist. mpqc.plot.power will not load it.\n',fname)
     return
-else 
+else
     load(fname, "-mat")
 end
 
@@ -33,7 +33,6 @@ end
 fig = mpqc.tools.returnFigureHandleForFile([fname,mfilename]);
 
 %%
-figure
 subplot(1,2,1)
 title(sprintf('Wavelength = %d nm', powerMeasurements.laserWavelength))
 P.observed = plot(repmat(powerMeasurements.powerSeriesPercent,1,...
