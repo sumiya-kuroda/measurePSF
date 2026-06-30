@@ -25,8 +25,6 @@ if nargin<1
     data_dir = pwd;
 end
 
-debugPlots = true;
-
 maintenanceFiles = dir(fullfile(data_dir,'\**\*.mat'));
 n=1;
 
@@ -54,7 +52,7 @@ date_list = [plotting_template.date];
 [~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
 plotting_template = plotting_template(order);
 
-if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date   
+if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date
     idx = find(strcmp(varargin, 'startDate'), 1);  % first match
     startDate = datetime(varargin{idx + 1});
     startIndex = 1;
@@ -67,7 +65,7 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
 end
 
 % If only one wavelength is measured
-if isequal(plotting_template(:).wavelength) 
+if isequal(plotting_template(:).wavelength)
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.mat')
             % If power data is found, load it and find max value
@@ -111,7 +109,7 @@ elseif  any(strcmp(varargin, 'wavelength'))
     wavelength = varargin{idx + 1};
     a = 0;
     for ii = 1:length(plotting_template)
-        
+
         if contains(plotting_template(ii).full_path_to_data, '.mat') && isequal(plotting_template(ii).wavelength,wavelength)
             a=a+1;
             powerData(a) = load(plotting_template(ii).full_path_to_data);
@@ -120,8 +118,8 @@ elseif  any(strcmp(varargin, 'wavelength'))
             waveDate(a) = plotting_template(ii).date;
             percentAt100mW(a) = interp1(power,powerData(a).powerMeasurements.powerSeriesPercent,100);
 
-           
-            
+
+
             hold on
             subplot(3,1,1)
             plot(linspace(0,100,length(powerData(a).powerMeasurements.observedPower_mW)),mean(powerData(a).powerMeasurements.observedPower_mW,2),'.')
@@ -132,7 +130,7 @@ elseif  any(strcmp(varargin, 'wavelength'))
             hold off
 
         end
-        
+
     end
 
     if ~exist('powerData', 'var')
@@ -158,7 +156,7 @@ elseif  any(strcmp(varargin, 'wavelength'))
     end
 
 % If multiple wavelengths have been recorded
-else 
+else
 
     for i = 1:length(plotting_template)
         allWave(i) = plotting_template(i).wavelength;

@@ -22,7 +22,6 @@ if nargin<1
 end
 
 
-debugPlots = false;
 skipStandardSource = false;
 
 maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif'));

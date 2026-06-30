@@ -1,6 +1,6 @@
 function varargout = standard_light_source(data_dir,varargin)
 % Plots showing mean pixel value recorded from a standard light source over
-% time at the maximum gain recorded. 
+% time at the maximum gain recorded.
 %
 % mpqc.longitudinal.standard_light_source(maintenace_folder_path, varargin)
 % Optional inputs: Starting date- year-month-day
@@ -24,8 +24,6 @@ if nargin<1
     data_dir = pwd;
 end
 
-
-debugPlots = true;
 
 maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif'));
 n=1;
