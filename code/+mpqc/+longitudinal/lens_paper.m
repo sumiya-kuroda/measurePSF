@@ -90,6 +90,14 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
     title('Photons per Pixel')
     ylabel('Photons')
 
+    if nargout>0
+        out.fileName = {plotting_template(:).name};
+        out.photonsPerPixel = photonsPerPixel;
+        out.date ={plotting_template(:).date};
+        out.powerRanges = legendLabels;
+        varargout{1} = out;
+    end
+
 else
     % Group measurements by power within 20mW
     [sortedPower, sortIdx] = sort([plotting_template.power]);
