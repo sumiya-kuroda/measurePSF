@@ -82,6 +82,9 @@ function uniform_slide(varargin)
     API.hSI.hDisplay.volumeDisplayStyle='Current';
 
     API.hSI.hRoiManager.scanZoomFactor = 1; % Set zoom
+    
+    % disable bidi to avoid amplifier-induced bidi artifacts with some detectors
+    API.hSI.hScan2D.bidirectional = 0; 
 
     API.hSI.hChannels.loggingEnable=true;
 
