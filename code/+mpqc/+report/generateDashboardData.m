@@ -15,6 +15,8 @@ function generateDashboardData(data_dir)
 % Note what figures are open by user
 figsBefore = findall(groot,'Type','figure');
 
+dashboardData = struct();
+
 disp('Searching for electrical noise data')
 en = mpqc.longitudinal.electrical_noise(data_dir);
 if isempty(en)
@@ -24,8 +26,7 @@ else
     varNames = cellstr("PMT" + (1:m));
     electrical_noise = array2table(en.twoSD',  'VariableNames', varNames);
     electrical_noise = addvars(electrical_noise, string(en.date(:)),'Before', 1,'NewVariableNames', 'Date');
-    outfile = fullfile(data_dir, 'electrical_noise_dashboard.csv');
-    writetable(electrical_noise, outfile);
+    dashboardData.electrical_noise = table2struct(electrical_noise);
 end
 
 disp('Searching for power data')
@@ -34,8 +35,7 @@ if isempty(pow)
     disp('No power data')
 else
     power = table(pow.date', pow.maxPower',pow.percentAt100mW', 'VariableNames',{'Date','MaxPower','PercentAt100mW'});
-    outfile = fullfile(data_dir, 'power_dashboard.csv');
-    writetable(power, outfile);
+    dashboardData.power = table2struct(power);
 end
 
 disp('Searching for standard light source data')
@@ -44,8 +44,7 @@ if isempty(stdLight)
     disp('No standard light source data')
 else
     stdLightSource = table(stdLight.maxDate',stdLight.meanValue');
-    outfile = fullfile(data_dir, 'standard_light_dashboard.csv');
-    writetable(stdLightSource, outfile);
+    dashboardData.standard_light_source = table2struct(stdLightSource);
 end
 
 disp('Searching for photon counting data')
@@ -57,9 +56,18 @@ else
     data = cell2mat(cellfun(@(x) x(:), photons.photonsPerPixel, 'UniformOutput', false));
     photonsPerPixel = array2table(data, 'VariableNames', photons.powerRanges);
     photonsPerPixel = addvars(photonsPerPixel, datetime([photons.date{:}])', 'Before', 1, 'NewVariableNames', 'Date');
-    outfile = fullfile(data_dir, 'photons_perpixel_dashboard.csv');
-    writetable(photonsPerPixel, outfile);
+    dashboardData.photons_perpixel = table2struct(photonsPerPixel);
 end
+
+outfile = fullfile(data_dir, 'dashboardData.json');
+fid = fopen(outfile, 'w');
+if fid == -1
+    error('mpqc:report:generateDashboardData:FileOpenFailed', ...
+        'Could not open %s for writing.', outfile);
+end
+cleanup = onCleanup(@() fclose(fid));
+fwrite(fid, jsonencode(dashboardData), 'char');
+clear cleanup
 
 % closes any figures opened by code
 figsAfter = findall(groot,'Type','figure');
