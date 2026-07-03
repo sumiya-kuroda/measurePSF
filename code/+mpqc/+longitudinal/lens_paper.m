@@ -82,7 +82,8 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
             photonsPerPixel(ii) = data(ii).mean_photons_per_pixel;
         end
     end
-
+    
+    fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
     plot(photonsPerPixel)
     xlabels = string({plotting_template.date});
     xticks(1:length(xlabels))

@@ -66,6 +66,7 @@ end
 
 % If only one wavelength is measured
 if isequal(plotting_template(:).wavelength)
+    fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.mat')
             % If power data is found, load it and find max value
@@ -104,7 +105,8 @@ if isequal(plotting_template(:).wavelength)
 
 % If you only want to plot one measured wavelength, specified in varargin
 elseif  any(strcmp(varargin, 'wavelength'))
-
+    
+    fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
     idx = find(strcmp(varargin, 'wavelength'), 1);
     wavelength = varargin{idx + 1};
     a = 0;
@@ -158,6 +160,8 @@ elseif  any(strcmp(varargin, 'wavelength'))
 % If multiple wavelengths have been recorded
 else
 
+    fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
+    
     for i = 1:length(plotting_template)
         allWave(i) = plotting_template(i).wavelength;
     end
