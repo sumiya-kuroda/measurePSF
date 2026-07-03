@@ -25,7 +25,7 @@ if nargin<1
     data_dir = pwd;
 end
 
-maintenanceFiles = dir(fullfile(data_dir,'\**\*.mat'));
+maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
@@ -161,7 +161,7 @@ elseif  any(strcmp(varargin, 'wavelength'))
 else
 
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
-    
+
     for i = 1:length(plotting_template)
         allWave(i) = plotting_template(i).wavelength;
     end

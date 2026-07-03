@@ -24,7 +24,7 @@ end
 
 skipStandardSource = false;
 
-maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif'));
+maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
