@@ -31,7 +31,7 @@ for ii=1:length(maintenanceFiles)
     tmp = maintenanceFiles(ii);
 
     if contains(tmp.name,'lens_paper')
-        plotting_template(n) = generic_generator_template(tmp);
+        plotting_template(n).full_path_to_data = fullfile(tmp.folder,tmp.name);
         plotting_template(n).type = 'lens_paper';
         plotting_template(n).plotting_func = @mpqc.plot.lens_paper;
         plotting_template(n).wavelength = str2num(cell2mat(regexp(tmp.name,'\d*(?=nm)','match')));
