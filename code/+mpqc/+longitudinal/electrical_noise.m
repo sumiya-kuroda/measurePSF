@@ -54,7 +54,7 @@ if nargin > 1 % Optional variable for selecting starting date
     startDate = datetime(varargin{1});
     startIndex = 1;
 
-    while [plotting_template(startIndex).date] < startDate
+    while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
         startIndex = startIndex + 1;
     end
 
