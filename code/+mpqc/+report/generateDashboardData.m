@@ -43,7 +43,9 @@ stdLight = mpqc.longitudinal.standard_light_source(data_dir);
 if isempty(stdLight)
     disp('No standard light source data')
 else
-    stdLightSource = table(stdLight.maxDate',stdLight.meanValue');
+    m = size(stdLight.meanValue);
+    varNames = cellstr("Ch" + (1:m));
+    stdLightSource = table(stdLight.maxDate',stdLight.meanValue','VariableNames',{'Date',varNames});
     dashboardData.standard_light_source = table2struct(stdLightSource);
 end
 
@@ -59,19 +61,19 @@ else
     dashboardData.photons_perpixel = table2struct(photonsPerPixel);
 end
 
-outfile = fullfile(data_dir, 'dashboardData.json');
+% TO DO add in system info from latest yaml file
+
+outfile = fullfile(data_dir, 'dashboardData4.json');
 fid = fopen(outfile, 'w');
 if fid == -1
     error('mpqc:report:generateDashboardData:FileOpenFailed', ...
         'Could not open %s for writing.', outfile);
 end
 cleanup = onCleanup(@() fclose(fid));
-fwrite(fid, jsonencode(dashboardData), 'char');
+fwrite(fid, jsonencode(dashboardData,PrettyPrint=true));
 clear cleanup
 
 % closes any figures opened by code
 figsAfter = findall(groot,'Type','figure');
 newFigs = setdiff(figsAfter, figsBefore);
 delete(newFigs)
-
-
