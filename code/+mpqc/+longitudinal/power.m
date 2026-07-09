@@ -25,7 +25,7 @@ if nargin<1
     data_dir = pwd;
 end
 
-maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
+maintenanceFiles = dir(fullfile(data_dir,'**','*.mat'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
