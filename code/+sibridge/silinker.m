@@ -202,7 +202,7 @@ classdef silinker < handle
 
         function numPMTs = numberOfAvailablePMTs(obj)
             % Return the number of PMTs with an connected DAQ line as an integer
-            numPMTs =  cellfun(@(x) ~isempty(x.hAOGain), obj.hSI.hPmts.hPMTs)
+            numPMTs =  cellfun(@(x) ~isempty(x.hAOGain), obj.hSI.hPmts.hPMTs);
         end % numberOfAvailableChannels
 
 
@@ -218,7 +218,7 @@ classdef silinker < handle
                 return
             end
 
-            if length(gain)==1
+            if isscalar(gain)
                 obj.hSI.hPmts.gains = repmat(gain,1,4);
             elseif length(obj.hSI.hPmts.gains) == length(gain)
                 obj.hSI.hPmts.gains = gain(:)';
