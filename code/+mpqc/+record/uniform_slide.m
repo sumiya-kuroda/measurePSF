@@ -86,7 +86,7 @@ function uniform_slide(varargin)
     % Also disable blanking, because these bright slides induce enormous amp ringing that 
     % can create artifacts that look problematic at brighter signal levels, but are electrical
     % rather than optical
-    API.hSI.hBeams.turnAroundBlanking = false
+    API.hSI.hBeams.turnAroundBlanking = false;
     API.hSI.hBeams.flybackBlanking = false;
 
     % Also disable bidi, because why not?
