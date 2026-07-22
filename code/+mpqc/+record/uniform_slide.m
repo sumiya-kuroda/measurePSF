@@ -36,19 +36,12 @@ function uniform_slide(varargin)
     % Rob Campbell, SWC AMF, initial commit 2022
 
 
-    % Parse the input arguments
-    out =  parseInputVariable(varargin{:});
-    laser_wavelength=out.wavelength;
-    laser_power_in_mW = out.power;
-
-
     % Connect to ScanImage using the linker class
     API = sibridge.silinker;
 
     if API.linkSucceeded == false
         return
     end
-
 
     if ~strcmp(API.scannerType,'resonant')
         fprintf('%s is only safe with a resonant scanner. Quitting. \n',mfilename)
@@ -61,6 +54,13 @@ function uniform_slide(varargin)
         % message produced by API.getSaveChannelName;
         return
     end
+
+
+    % Parse the input arguments
+    out =  parseInputVariable(varargin{:});
+    laser_wavelength=out.wavelength;
+    laser_power_in_mW = out.power;
+
 
 
     % Create 'diagnostic' directory in the user's desktop
@@ -83,8 +83,15 @@ function uniform_slide(varargin)
 
     API.hSI.hRoiManager.scanZoomFactor = 1; % Set zoom
     
-    % disable bidi to avoid amplifier-induced bidi artifacts with some detectors
+    % Also disable blanking, because these bright slides induce enormous amp ringing that 
+    % can create artifacts that look problematic at brighter signal levels, but are electrical
+    % rather than optical
+    API.hSI.hBeams.turnAroundBlanking = false
+    API.hSI.hBeams.flybackBlanking = false;
+
+    % Also disable bidi, because why not?
     API.hSI.hScan2D.bidirectional = 0; 
+
 
     API.hSI.hChannels.loggingEnable=true;
 

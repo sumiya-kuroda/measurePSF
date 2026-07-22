@@ -1,6 +1,10 @@
 
 # MPQC Change-Log
 
+### 2026/07/22
+ * Disable blanking during uniform slid recording. These bright slides can induce enormous amp ringing that 
+  create artifacts that look problematic at brighter signal levels, but are electrical rather than optical.
+
 
 ### 2026/06/23
  * Prompts to edit default fields in YAML. More graceful failure if YAML is broken.

@@ -31,6 +31,10 @@ function settings = recordScanImageSettings(API)
         settings.stackManSlowFastZ = API.hSI.hStackManager.slowStackWithFastZ;  %This will be enabled
     end
 
+
+    settings.turnAroundBlanking = API.hSI.hBeams.turnAroundBlanking;
+    settings.flybackBlanking = API.hSI.hBeams.flybackBlanking;
+
     settings.zoomFactor = API.hSI.hRoiManager.scanZoomFactor;
     settings.pixelsPerLine = API.hSI.hRoiManager.pixelsPerLine;
 
