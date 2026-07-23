@@ -43,7 +43,6 @@ imData = {};
 for ii = 1:nChannels
     tChan = stripeDataBuffer{1}.roiData{1}.imageData{ii}{1};
     tChan = repmat(tChan,1,1,nAveFrames);
-    size(tChan)
     for jj = 1:nAveFrames
         tChan(:,:,jj) = stripeDataBuffer{jj}.roiData{1}.imageData{ii}{1};
 
