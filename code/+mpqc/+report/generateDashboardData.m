@@ -23,6 +23,7 @@ dashboardData.system = [];
 % Data section
 dashboardData.metrics = [];
 
+% Electrical noise
 disp('Searching for electrical noise data')
 en = mpqc.longitudinal.electrical_noise(data_dir);
 if isempty(en)
@@ -42,6 +43,7 @@ else
     dashboardData.metrics.electrical_noise.varNames = varNames;
 end
 
+% Power
 disp('Searching for power data')
 pow = mpqc.longitudinal.power(data_dir);
 if isempty(pow)
@@ -60,43 +62,45 @@ else
     dashboardData.metrics.power.varNames = varNames;
 end
 
-% disp('Searching for standard light source data')
-% stdLight = mpqc.longitudinal.standard_light_source(data_dir);
-% if isempty(stdLight)
-%     disp('No standard light source data')
-% else
-%     m = size(stdLight.meanValue);
-%     varNames = cellstr("Ch" + (1:m));
-%     stdLightSource = array2table(stdLight.meanValue', 'VariableNames',varNames);
-%     stdLightSource = addvars(stdLightSource,string(stdLight.maxDate(:)),'Before',1,'NewVariableNames','Date');
-%     % varNames = ['Date',varNames];
-%     % stdLightSource = table(stdLight.maxDate',stdLight.meanValue');%,'VariableNames',varNames);
-%     % stdLightSource = splitvars(stdLightSource,'VariableNames',varNames);
-%     dashboardData.standard_light_source = stdLightSource;
-% end
+% Standard light source
+disp('Searching for standard light source data')
+stdLight = mpqc.longitudinal.standard_light_source(data_dir);
+if isempty(stdLight)
+    disp('No standard light source data')
+else
+    m = size(stdLight.meanValue, 1);
+    varNames = ["date", "ch" + string(1:m)];
+    dates = datetime(string([stdLight.maxDate{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
+    n = numel(datesISO);
+    stdLightData = cell(n, 1);
 
+    for ii = 1:n
+        stdLightData{ii} = [{datesISO{ii}}, num2cell(stdLight.meanValue(:, ii)')];
+    end
+    % dashboardData.metrics.standardLight.label = 'Standard Light Source';
+    dashboardData.metrics.standardLight.data = stdLightData;
+    dashboardData.metrics.standardLight.varNames = varNames;
+    
+end
+
+% Lens paper photons per pixel
 disp('Searching for photon counting data')
 photons = mpqc.longitudinal.lens_paper(data_dir,true);
 if isempty(photons)
     disp('No photon counting data')
 else
     varNames = ['date',photons.powerRanges];
-     dates = datetime(string([photons.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    dates = datetime(string([photons.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
-photonsPerPixel = cell(n, 1);
-
-for ii = 1:n
-    values = cellfun(@(x) x(ii), photons.photonsPerPixel);
-    photonsPerPixel{ii} = [{datesISO{ii}}, num2cell(values)];
-end
+    photonsPerPixel = cell(n, 1);
+    for ii = 1:n
+        values = cellfun(@(x) x(ii), photons.photonsPerPixel);
+        photonsPerPixel{ii} = [{datesISO{ii}}, num2cell(values)];
+    end
     dashboardData.metrics.photonsPerPixel.data = photonsPerPixel;
     dashboardData.metrics.photonsPerPixel.varNames = varNames;
-    % powerRange = numel(photons.photonsPerPixel);
-    % data = cell2mat(cellfun(@(x) x(:), photons.photonsPerPixel, 'UniformOutput', false));
-    % photonsPerPixel = array2table(data, 'VariableNames', photons.powerRanges);
-    % photonsPerPixel = addvars(photonsPerPixel, datetime([photons.date{:}])', 'Before', 1, 'NewVariableNames', 'Date');
-    % dashboardData.photons_perpixel = photonsPerPixel;
 end
 
 
