@@ -41,6 +41,8 @@ else
     end
     dashboardData.metrics.electrical_noise.data = data;
     dashboardData.metrics.electrical_noise.varNames = varNames;
+    dashboardData.metrics.electrical_noise.label = 'Electrical Noise';
+    dashboardData.metrics.electrical_noise.units = 'pixel value';
 end
 
 % Power
@@ -60,6 +62,8 @@ else
     end
     dashboardData.metrics.power.data = power;
     dashboardData.metrics.power.varNames = varNames;
+    dashboardData.metrics.power.label = 'Laser Power';
+    dashboardData.metrics.power.units = 'mW';
 end
 
 % Standard light source
@@ -74,14 +78,14 @@ else
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     stdLightData = cell(n, 1);
-
     for ii = 1:n
         stdLightData{ii} = [{datesISO{ii}}, num2cell(stdLight.meanValue(:, ii)')];
     end
     % dashboardData.metrics.standardLight.label = 'Standard Light Source';
     dashboardData.metrics.standardLight.data = stdLightData;
-    dashboardData.metrics.standardLight.varNames = varNames;
-    
+    dashboardData.metrics.standardLight.varNames = varNames;  
+    dashboardData.metrics.standardLight.label = 'Standard Light Source';
+    dashboardData.metrics.standardLight.units = 'mean pixel value';
 end
 
 % Lens paper photons per pixel
@@ -101,6 +105,8 @@ else
     end
     dashboardData.metrics.photonsPerPixel.data = photonsPerPixel;
     dashboardData.metrics.photonsPerPixel.varNames = varNames;
+    dashboardData.metrics.photonsPerPixel.label = 'Photons per pixel';
+    dashboardData.metrics.photonsPerPixel.units = 'photons/pixel';
 end
 
 
