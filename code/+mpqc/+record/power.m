@@ -105,7 +105,7 @@ classdef power < handle
         %   .currentTime
         %   .SIpower_mW
         %   .laserWavelength
-        %   .fittedMinAndMax
+        %   .fittedMinAndMax -- used to calibrate scanimage
 
         wasSaved = false;
 
@@ -375,10 +375,15 @@ classdef power < handle
             % Pre-allocate local variables for plotting
             observedPower_mW = nan(obj.numSteps, obj.sampleReps);
             SIpower_mW = nan(1, obj.numSteps)';
-            powerSeriesPercent = linspace(1,100,obj.numSteps);
 
-            % A linear fit will go here
-            obj.H_fit = plot([powerSeriesPercent(1), powerSeriesPercent(end)], ...
+            %These are the range of values we will be looping the power
+            %over. We avoid the extremes, as those are more likely be 
+            %non-linear and these will skew the fit. 
+            powerSeriesPercent = linspace(10,90,obj.numSteps);
+            
+            % A linear fit will go here. It will be evaluated over the 
+            % full 0 to 100 percent range. 
+            obj.H_fit = plot([0, 100], ...
                 [nan,nan],'-r','LineWidth',2,'Parent', obj.hAxPower);
 
             hold(obj.hAxPower,'on')
@@ -405,7 +410,14 @@ classdef power < handle
             obj.hAxPower.XLabel.String = 'Percent Power';
 
             % Set Y axis limits to reasonable values from the start
-            obj.hAxPower.YLim = [0, obj.API.powerPercent2Watt(1)*1200]; %max power times 1.2
+            maxPower = obj.API.powerPercent2Watt(1);
+            if ~isnan(maxPower)
+                obj.hAxPower.YLim = [0, maxPower*1200]; %max power times 1.2
+            else
+                % If maxPower was a nan, that means power is not calibrated
+                % Guess 1W
+                obj.hAxPower.YLim = [0, 1000];
+            end
             obj.hAxPower.XLim = [0,105];
 
             obj.API.turnOffAllPMTs
@@ -466,7 +478,9 @@ classdef power < handle
             obj.powerMeasurements.fittedMinAndMax = [];
             obj.powerMeasurements.sensorName = obj.powermeter.sensorName;
 
-            % Updates obj.powerMeasurements.fittedMinAndMax
+            % Updates obj.powerMeasurements.fittedMinAndMax, which will
+            % be used to calibrate scanimage. 
+
             obj.fitRawData
 
             obj.enableButtons;
@@ -548,14 +562,17 @@ classdef power < handle
 
             x=[ones(size(xraw)),xraw];
 
-            [b,bint,r,~,out_stats]=regress(y,x);
+            b=regress(y,x);
 
             X = obj.H_fit.XData;
+            X=[0,100];
+            %X=0:10:100;
             Y = b(1)+ X*b(2);
-
             obj.H_fit.YData = Y;
-
+            
             obj.powerMeasurements.fittedMinAndMax = Y;
+            obj.powerMeasurements.fitCoefs = b;
+
         end % fitRawData
 
         function disableButtons(obj)

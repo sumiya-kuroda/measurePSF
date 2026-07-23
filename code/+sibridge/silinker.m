@@ -318,6 +318,12 @@ classdef silinker < handle
                 return
             end
 
+            if isempty(obj.hSI.hBeams.hBeams{beamIndex}.powerFraction2PowerWattLut)
+                % If empty this is an uncalibrated state so we need to make
+                % the array before it is populated
+                obj.hSI.hBeams.hBeams{beamIndex}.powerFraction2PowerWattLut = [0,0;1,1];
+            end
+            
             obj.hSI.hBeams.hBeams{beamIndex}.powerFraction2PowerWattLut(:,2) = minMaxW;
 
         end % setBeamMinMaxPowerInW
