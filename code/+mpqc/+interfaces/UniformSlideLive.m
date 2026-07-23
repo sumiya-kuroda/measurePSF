@@ -34,9 +34,11 @@ classdef UniformSlideLive < handle
     %
     % Rob Campbell, SWC AMF
 
-
     properties
         updateInterval = 1 % How often to poll ScanImage (seconds)
+        displayedChanIndex = 1; %This isn't the channel index! If chans 2 
+                                % and 4 are displayed and this is 2 then 
+                                % chan 4 is plotted to screen
         overlayZoom = [1.2,2,4] % Which zoom values to overlay as boxes
         crossSections = 'scanner' % 'scanner' or 'diagonal' (see renderer docs)
     end
@@ -72,7 +74,6 @@ classdef UniformSlideLive < handle
                 figure(fig)
             end
             obj.hFig.CloseRequestFcn = @obj.windowCloseFcn;
-
             obj.hTimer = timer('Name', 'UniformSlideLiveTimer', ...
                             'Period', obj.updateInterval, ...
                             'ExecutionMode', 'fixedSpacing', ...
@@ -143,11 +144,7 @@ classdef UniformSlideLive < handle
                 return
             end
 
-            if length(T)>1
-                im = mean(cat(3,T{:}),3);
-            else
-                im = T{1};
-            end
+            im = T{obj.displayedChanIndex};
 
             % Query the pixel size each time so zoom changes are handled correctly
             micsPerPixelXY = sibridge.getFOV / obj.API.hSI.hRoiManager.linesPerFrame;

@@ -32,7 +32,8 @@ classdef Grid2MicsPerPixel < handle
         muRows %The mean of the rotated grid image along the rows (second axis)
         micsPix %Structure storing the number of microns per pixel
         rotImage = 0; %If zero the image is not rotated after loading from SI. If
-                 %this is 1 we do 90 deg. If 2 180.
+                 %this is 1 we do 90 deg. If 2 180. This likely is not
+                 %needed
     end % properties
 
 

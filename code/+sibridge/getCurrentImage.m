@@ -45,8 +45,7 @@ for ii = 1:nChannels
     tChan = repmat(tChan,1,1,nAveFrames);
     for jj = 1:nAveFrames
         tChan(:,:,jj) = stripeDataBuffer{jj}.roiData{1}.imageData{ii}{1};
-
     end
-    imData{ii} = mean(tChan,3);
+    imData{ii} = mean(tChan,3).';
 end
 
