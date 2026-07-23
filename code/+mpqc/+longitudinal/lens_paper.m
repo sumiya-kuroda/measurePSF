@@ -3,13 +3,9 @@ function varargout = lens_paper(data_dir,varargin)
 %
 % mpqc.longitudinal.lens_paper(maintenace_folder_path, varargin)
 %
-% Inputs (optional)
 % Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.lens_paper(maintenace_folder_path, '2024-06-01')
-%
-% Purpose
-%
-%
+% mpqc.longitudinal.lens_paper(maintenace_folder_path, '2024-06-20')
+% Plots all data from given day forward
 %
 % Outputs
 % out (optional) - structure containing key information and data.

@@ -3,8 +3,10 @@ function varargout = standard_light_source(data_dir,varargin)
 % time at the maximum gain recorded.
 %
 % mpqc.longitudinal.standard_light_source(maintenace_folder_path, varargin)
+%
 % Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-01')
+% mpqc.longitudinal.standard_light_source(maintenace_folder_path, '2024-06-20')
+% Plots all data from given day forward
 %
 % Purpose
 % Plots of the mean pixel value of each PMT when recording a standard light

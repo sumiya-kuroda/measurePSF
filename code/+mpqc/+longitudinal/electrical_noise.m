@@ -2,8 +2,10 @@ function varargout = electrical_noise(data_dir,varargin)
 % Longitudinal electrical noise plots showing FWHM and max values over time
 %
 % mpqc.longitudinal.electrical_noise(maintenace_folder_path, varargin)
+%
 % Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-01')
+% mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-20')
+% Plots all data from given day forward
 %
 % Purpose
 % Plots of the pixel value at two standard deviations of electrical noise for each channel

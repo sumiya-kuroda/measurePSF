@@ -5,9 +5,11 @@ function varargout = power(data_dir,varargin)
 %
 % Optional inputs:
 % 'startDate', 'year-month-day'
-%  mpqc.longitudinal.power(maintennace_folder_path,'startDate','2024-06-01')
+%  mpqc.longitudinal.power(maintennace_folder_path,'startDate','2024-06-20')
+%  Plots all data from given day forward
 % 'wavelength', value
 %  mpqc.longitudinal.power(maintenance_folder_path,'wavelength',800)
+%  Plots measurements taken at specific wavelengths
 %
 % Purpose
 % Plots the power at the objective from 0-100% and compares maximum output
