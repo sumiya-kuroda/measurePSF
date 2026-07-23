@@ -29,11 +29,16 @@ if isempty(en)
     disp('No electrical noise data')
 else
     m = size(en.twoSD, 1);
-    varNames = ['dates', cellstr("PMT" + (1:m))];
+    varNames = ['date', cellstr("PMT" + (1:m))];
     twoSD = en.twoSD';
     dates = datetime(string([en.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
-    data = [datesISO, num2cell(twoSD(:, :))];
+    n = numel(datesISO);
+    data = cell(n, 1);
+
+    for ii = 1:n
+        data{ii} = [{datesISO{ii}}, num2cell(twoSD(ii, :))];
+    end
     dashboardData.metrics.electrical_noise.data = data;
     dashboardData.metrics.electrical_noise.varNames = varNames;
 end
@@ -44,40 +49,50 @@ if isempty(pow)
     disp('No power data')
 else
     % power = table(pow.date', pow.maxPower',pow.percentAt100mW', 'VariableNames',{'Date','MaxPower','PercentAt100mW'});
-    varNames = {'Date','MaxPower','PercentAt100mW'};
+    varNames = {'date','MaxPower','PercentAt100mW'};
     dates = datetime(string([pow.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
-    power = [datesISO',pow.maxPower,pow.percentAt100mW];
+    % power = [datesISO(:),num2cell(pow.maxPower(:)),num2cell(pow.percentAt100mW(:))];
+    n = numel(datesISO);
+    power = cell(n, 1);
+
+    for ii = 1:n
+        power{ii} = { ...
+            datesISO{ii}, ...
+            pow.maxPower(ii), ...
+            pow.percentAt100mW(ii) ...
+            };
+    end
     dashboardData.metrics.power.data = power;
     dashboardData.metrics.power.varNames = varNames;
 end
-% 
-% disp('Searching for standard light source data')
-% stdLight = mpqc.longitudinal.standard_light_source(data_dir);
-% if isempty(stdLight)
-%     disp('No standard light source data')
-% else
-%     m = size(stdLight.meanValue);
-%     varNames = cellstr("Ch" + (1:m));
-%     stdLightSource = array2table(stdLight.meanValue', 'VariableNames',varNames);
-%     stdLightSource = addvars(stdLightSource,string(stdLight.maxDate(:)),'Before',1,'NewVariableNames','Date');
-%     % varNames = ['Date',varNames];
-%     % stdLightSource = table(stdLight.maxDate',stdLight.meanValue');%,'VariableNames',varNames);
-%     % stdLightSource = splitvars(stdLightSource,'VariableNames',varNames);
-%     dashboardData.standard_light_source = stdLightSource;
-% end
-% 
-% disp('Searching for photon counting data')
-% photons = mpqc.longitudinal.lens_paper(data_dir,true);
-% if isempty(photons)
-%     disp('No photon counting data')
-% else
-%     powerRange = numel(photons.photonsPerPixel);
-%     data = cell2mat(cellfun(@(x) x(:), photons.photonsPerPixel, 'UniformOutput', false));
-%     photonsPerPixel = array2table(data, 'VariableNames', photons.powerRanges);
-%     photonsPerPixel = addvars(photonsPerPixel, datetime([photons.date{:}])', 'Before', 1, 'NewVariableNames', 'Date');
-%     dashboardData.photons_perpixel = photonsPerPixel;
-% end
+
+disp('Searching for standard light source data')
+stdLight = mpqc.longitudinal.standard_light_source(data_dir);
+if isempty(stdLight)
+    disp('No standard light source data')
+else
+    m = size(stdLight.meanValue);
+    varNames = cellstr("Ch" + (1:m));
+    stdLightSource = array2table(stdLight.meanValue', 'VariableNames',varNames);
+    stdLightSource = addvars(stdLightSource,string(stdLight.maxDate(:)),'Before',1,'NewVariableNames','Date');
+    % varNames = ['Date',varNames];
+    % stdLightSource = table(stdLight.maxDate',stdLight.meanValue');%,'VariableNames',varNames);
+    % stdLightSource = splitvars(stdLightSource,'VariableNames',varNames);
+    dashboardData.standard_light_source = stdLightSource;
+end
+
+disp('Searching for photon counting data')
+photons = mpqc.longitudinal.lens_paper(data_dir,true);
+if isempty(photons)
+    disp('No photon counting data')
+else
+    powerRange = numel(photons.photonsPerPixel);
+    data = cell2mat(cellfun(@(x) x(:), photons.photonsPerPixel, 'UniformOutput', false));
+    photonsPerPixel = array2table(data, 'VariableNames', photons.powerRanges);
+    photonsPerPixel = addvars(photonsPerPixel, datetime([photons.date{:}])', 'Before', 1, 'NewVariableNames', 'Date');
+    dashboardData.photons_perpixel = photonsPerPixel;
+end
 
 
 
