@@ -12,9 +12,18 @@ function electrical_noise(fname)
     %
     % Rob Campbell, SWC AMF
 
+    % bring up a file picker UI if the user did not input a file
+    [t_file, t_path] = uigetfile('*.tif', 'Select a file');
+    if nargin<1 || isempty(fname)
+        if isequal(t_file, 0)
+            return
+        else
+            fname = fullfile(t_path, t_file);
+        end
+    end
 
 
-    [imstack,metadata] = mpqc.tools.scanImage_stackLoad(fname);
+    imstack = mpqc.tools.scanImage_stackLoad(fname);
     if isempty(imstack)
         return
     end

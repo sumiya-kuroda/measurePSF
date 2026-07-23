@@ -8,7 +8,8 @@ function uniform_slide(fname,varargin)
     % Assumes data obtained from ScanImage (ideally at Zoom 1).
     %
     % Inputs [required]
-    % fname - relative or absolute path to image stack
+    % fname - relative or absolute path to image stack. Brings up a file
+    %     picker GUI if no path is supplied.
     %
     % Inputs [optional]
     % overlayZoom - Vector indicating which zoom values to overlay as boxes.
@@ -35,6 +36,17 @@ function uniform_slide(fname,varargin)
 
     overlayZoom = params.Results.overlayZoom;
     crossSections = params.Results.crossSections;
+    
+
+    % bring up a file picker UI if the user did not input a file
+    if nargin<1 || isempty(fname)
+        [t_file, t_path] = uigetfile('*.tif', 'Select a file');
+        if isequal(t_file, 0)
+            return
+        else
+            fname = fullfile(t_path, t_file);
+        end
+    end
 
     [imstack,metadata] = mpqc.tools.scanImage_stackLoad(fname);
     if isempty(imstack)
