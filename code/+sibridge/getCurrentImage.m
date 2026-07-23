@@ -19,11 +19,10 @@ function imData=getCurrentImage
 % Rob Campbell - Jan 2020
 
 
-im=[];
+imData = [];
 
 hSI = sibridge.getSIobject;
 if isempty(hSI)
-	imData = [];
     return
 end
 
