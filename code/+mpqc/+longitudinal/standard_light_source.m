@@ -109,12 +109,3 @@ if nargout>0
 end
 
 end
-
-function out = generic_generator_template(t_dir)
-out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
-out.type = [];
-out.plotting_func = [];
-out.name = [];
-out.date = [];
-out.gainsUsed = [];
-end
