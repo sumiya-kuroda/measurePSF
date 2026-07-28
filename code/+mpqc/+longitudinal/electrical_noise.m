@@ -83,7 +83,6 @@ for q = 1:size(noiseData,4) % each date
         t_im = noiseData(:,:,t,q);
 
         maxVal(t,q) = max(t_im(:));
-        meanVal(t,q) = mean(t_im(:));
         im_2SD(t,q) = std(t_im(:))*2;
 
         % Optionally plot
