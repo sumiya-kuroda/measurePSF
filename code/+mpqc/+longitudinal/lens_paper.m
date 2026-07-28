@@ -62,7 +62,7 @@ end
 
 if exist('startDate','var')
     startIndex = 1;
-    while [plotting_template(startIndex).date] < startDate
+    while [plotting_template(startIndex).date] < startDate  && startIndex <= numel(plotting_template)
         startIndex = startIndex + 1;
     end
     plotting_template = plotting_template(startIndex:end);

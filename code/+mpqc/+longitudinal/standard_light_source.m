@@ -60,7 +60,7 @@ if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting
     startDate = datetime(varargin{idx + 1});
     startIndex = 1;
 
-    while [plotting_template(startIndex).date] < startDate
+    while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
         startIndex = startIndex + 1;
     end
 
