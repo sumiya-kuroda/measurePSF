@@ -27,6 +27,8 @@ if nargin<1
     data_dir = pwd;
 end
 
+inputOptions = parseLongitudinalInputVariable(varargin{:});
+
 maintenanceFiles = dir(fullfile(data_dir,'**','*.mat'));
 n=1;
 
@@ -54,9 +56,8 @@ date_list = [plotting_template.date];
 [~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
 plotting_template = plotting_template(order);
 
-if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date
-    idx = find(strcmp(varargin, 'startDate'), 1);  % first match
-    startDate = datetime(varargin{idx + 1});
+if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
+    startDate = inputOptions.startDate;
     startIndex = 1;
 
     while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
@@ -106,11 +107,10 @@ if isequal(plotting_template(:).wavelength)
     ylabel('Percent power')
 
 % If you only want to plot one measured wavelength, specified in varargin
-elseif  any(strcmp(varargin, 'wavelength'))
+elseif ~isempty(inputOptions.wavelength)
     
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
-    idx = find(strcmp(varargin, 'wavelength'), 1);
-    wavelength = varargin{idx + 1};
+    wavelength = inputOptions.wavelength;
     a = 0;
     for ii = 1:length(plotting_template)
 
