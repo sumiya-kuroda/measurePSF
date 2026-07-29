@@ -111,7 +111,7 @@ end
 
 
 
-outfile = fullfile(data_dir, 'dashboardData5.json');
+outfile = fullfile(data_dir, 'longitudinalDashboardData.json');
 fid = fopen(outfile, 'w');
 if fid == -1
     error('mpqc:report:generateDashboardData:FileOpenFailed', ...
