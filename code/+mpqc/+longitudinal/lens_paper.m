@@ -70,12 +70,16 @@ end
 
 % If only one wavelength is measured and the power is within 20mW
 if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) - min([plotting_template.power]) <= 20
+    
+powerRange = cell(1,1);
+
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.tif')
 
             % calculate photons per pixel
             data(ii) = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data,[],skipStandardSource);
             photonsPerPixel(ii) = data(ii).mean_photons_per_pixel;
+            powerRange{g}= [min(plotting_template.power), max(plotting_template.power)];
         end
     end
     
@@ -91,7 +95,7 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
         out.fileName = {plotting_template(:).name};
         out.photonsPerPixel = photonsPerPixel;
         out.date ={plotting_template(:).date};
-        out.powerRanges = legendLabels;
+        out.powerRanges = powerRange;
         varargout{1} = out;
     end
 
@@ -118,6 +122,7 @@ else
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
 
     legendLabels = cell(1,numel(groups));
+    powerRange = cell(1,numel(groups));
     photonsPerPixel = cell(1,numel(groups));
 
     for g = 1:numel(groups)
@@ -126,6 +131,7 @@ else
 
         legendLabels{g} = sprintf('Power between  %g-%g mW', ...
             min(groupPowers), max(groupPowers));
+        powerRange{g}= [min(groupPowers), max(groupPowers)];
         photonsPerPixel{g} = nan(1,length(plotting_template));
         for ii = 1:length(idx)
             data = mpqc.analyse.get_quantalsize_from_file( ...
@@ -152,7 +158,7 @@ else
         out.fileName = {plotting_template(:).name};
         out.photonsPerPixel = photonsPerPixel;
         out.date ={plotting_template(:).date};
-        out.powerRanges = legendLabels;
+        out.powerRanges = powerRange;
         varargout{1} = out;
     end
 end
