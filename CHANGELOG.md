@@ -1,9 +1,17 @@
 
 # MPQC Change-Log
 
+
+### 2026/07/27
+ * First write of the YAML file has the curly backet format throughout, including for empty fields. 
+   This makes hand editing easier. 
+
 ### 2026/07/23
  * BUGFIX: Grid image was incorrectly rotated. 
- * Started work on Dev branch on a live version of the uniform slide viewer. 
+ * DEV: `mpqc.interfaces.UniformSlideLive` creates a live preview version of the 
+    uniform slide. This maybe will need to be moved to a better location. But it works
+    for now, and it does help with alignment. 
+
 
 ### 2026/07/22
  * Disable blanking during uniform slid recording. These bright slides can induce enormous amp ringing that 
