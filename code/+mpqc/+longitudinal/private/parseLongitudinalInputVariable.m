@@ -7,6 +7,7 @@ function out = parseLongitudinalInputVariable(varargin)
     %  'startDate' - First measurement date to include. This can be a
     %                datetime, string, or character vector.
     %  'wavelength' - Excitation wavelength to include, in nm.
+    %  'skipStandardSource' - Whether to exclude standard light source data.
     %
     % Outputs
     % out - A structure containing the supplied options. startDate is
@@ -19,6 +20,7 @@ function out = parseLongitudinalInputVariable(varargin)
     params.KeepUnmatched = true;
     params.addParameter('startDate', [], @(x) isdatetime(x) || ischar(x) || isstring(x));
     params.addParameter('wavelength', [], @(x) isnumeric(x));
+    params.addParameter('skipStandardSource', false, @(x) islogical(x) && isscalar(x));
     params.parse(varargin{:});
 
     out = params.Results;

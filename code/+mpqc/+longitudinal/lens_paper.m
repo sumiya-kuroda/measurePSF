@@ -3,9 +3,11 @@ function varargout = lens_paper(data_dir,varargin)
 %
 % mpqc.longitudinal.lens_paper(maintenace_folder_path, varargin)
 %
-% Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.lens_paper(maintenace_folder_path, '2024-06-20')
+% Optional inputs: 'startDate', 'year-month-day'
+% mpqc.longitudinal.lens_paper(maintenace_folder_path, 'startDate', '2024-06-20')
 % Plots all data from given day forward
+% 'skipStandardSource', true
+% Excludes standard light source data when calculating photons per pixel
 %
 % Outputs
 % out (optional) - structure containing key information and data.
@@ -17,8 +19,8 @@ if nargin<1
     data_dir = pwd;
 end
 
-
-skipStandardSource = false;
+inputOptions = parseLongitudinalInputVariable(varargin{:});
+skipStandardSource = inputOptions.skipStandardSource;
 
 maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
 n=1;
@@ -50,17 +52,8 @@ date_list = [plotting_template.date];
 plotting_template = plotting_template(order);
 
 
-if nargin > 1
-    for argInd = 1:length(varargin)
-        if islogical(varargin{argInd})
-            skipStandardSource = varargin{argInd};
-        else
-            startDate = datetime(varargin{argInd});
-        end
-    end
-end
-
-if exist('startDate','var')
+if ~isempty(inputOptions.startDate)
+    startDate = inputOptions.startDate;
     startIndex = 1;
     while [plotting_template(startIndex).date] < startDate  && startIndex <= numel(plotting_template)
         startIndex = startIndex + 1;
@@ -72,6 +65,7 @@ end
 if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) - min([plotting_template.power]) <= 20
     
 powerRange = cell(1,1);
+legendLabels = cell(1,1);
 
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.tif')
@@ -79,7 +73,9 @@ powerRange = cell(1,1);
             % calculate photons per pixel
             data(ii) = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data,[],skipStandardSource);
             photonsPerPixel(ii) = data(ii).mean_photons_per_pixel;
-            powerRange{g}= [min(plotting_template.power), max(plotting_template.power)];
+            powerRange= [min([plotting_template.power]), max([plotting_template.power])];
+             legendLabels = sprintf('Power between  %g-%g mW', ...
+            min([plotting_template.power]), max([plotting_template.power]));
         end
     end
     
@@ -90,6 +86,7 @@ powerRange = cell(1,1);
     xticklabels(xlabels)
     title('Photons per Pixel')
     ylabel('Photons')
+    legend(legendLabels,'Location','northeast')
 
     if nargout>0
         out.fileName = {plotting_template(:).name};

@@ -4,8 +4,8 @@ function varargout = standard_light_source(data_dir,varargin)
 %
 % mpqc.longitudinal.standard_light_source(maintenace_folder_path, varargin)
 %
-% Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.standard_light_source(maintenace_folder_path, '2024-06-20')
+% Optional inputs: 'startDate', 'year-month-day'
+% mpqc.longitudinal.standard_light_source(maintenace_folder_path, 'startDate', '2024-06-20')
 % Plots all data from given day forward
 %
 % Purpose
@@ -26,6 +26,7 @@ if nargin<1
     data_dir = pwd;
 end
 
+inputOptions = parseLongitudinalInputVariable(varargin{:});
 
 maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
 n=1;
@@ -55,9 +56,8 @@ date_list = [plotting_template.date];
 [~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
 plotting_template = plotting_template(order);
 
-if any(strcmp(varargin, 'startDate')) % Optional variable for selecting starting date
-    idx = find(strcmp(varargin, 'startDate'), 1);  % first match
-    startDate = datetime(varargin{idx + 1});
+if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
+    startDate = inputOptions.startDate;
     startIndex = 1;
 
     while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
