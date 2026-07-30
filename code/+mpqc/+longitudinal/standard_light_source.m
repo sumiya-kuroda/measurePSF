@@ -70,7 +70,7 @@ end
 
 maxGain = max([plotting_template.gainsUsed]);
 plotting_template_max = plotting_template([plotting_template.gainsUsed] == maxGain);
-
+meanValue = zeros(length(plotting_template_max),length(metaData.channelSave));
 
 for ii = 1:length(plotting_template_max) % each date
     if contains(plotting_template_max(ii).full_path_to_data, '.tif')

@@ -66,6 +66,8 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
     
 powerRange = cell(1,1);
 legendLabels = cell(1,1);
+data = zeros(length(plotting_template));
+photonsPerPixel = zeros(length(plotting_template));
 
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.tif')

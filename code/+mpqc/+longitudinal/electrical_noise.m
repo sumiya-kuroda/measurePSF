@@ -71,6 +71,8 @@ for ii = 1:length(plotting_template)
 end
 
 noiseData = single(noiseData);
+maxVal = zeros(size(noiseData,3),size(noiseData,4));
+im_2SD = zeros(size(noiseData,3),size(noiseData,4));
 
 for q = 1:size(noiseData,4) % each date
 

@@ -67,6 +67,10 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     plotting_template = plotting_template(startIndex:end);
 end
 
+powerData = zeros(length(plotting_template));
+maxPower = zeros(length(plotting_template));
+percentAt100mW = zeros(length(plotting_template));
+
 % If only one wavelength is measured
 if isequal(plotting_template(:).wavelength)
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
@@ -161,7 +165,7 @@ elseif ~isempty(inputOptions.wavelength)
 
 % If multiple wavelengths have been recorded
 else
-
+    allWave = zeros(length(plotting_template));
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
 
     for i = 1:length(plotting_template)
