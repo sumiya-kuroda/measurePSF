@@ -67,7 +67,7 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     plotting_template = plotting_template(startIndex:end);
 end
 
-powerData = zeros(length(plotting_template));
+powerData = struct('powerMeasurements', cell(length(plotting_template), 1));
 maxPower = zeros(length(plotting_template));
 percentAt100mW = zeros(length(plotting_template));
 
