@@ -70,19 +70,23 @@ end
 
 maxGain = max([plotting_template.gainsUsed]);
 plotting_template_max = plotting_template([plotting_template.gainsUsed] == maxGain);
-meanValue = zeros(length(plotting_template_max),length(metaData.channelSave));
+minGain = min([plotting_template.gainsUsed]);
+plotting_template_min = plotting_template([plotting_template.gainsUsed] == minGain);
+
+meanValue = nan(4,length(plotting_template_max));
 
 for ii = 1:length(plotting_template_max) % each date
     if contains(plotting_template_max(ii).full_path_to_data, '.tif')
-        [data,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template_max(ii).full_path_to_data);
+        [maxData,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template_max(ii).full_path_to_data,false);
+        [minData,minMetaData] = mpqc.tools.scanImage_stackLoad(plotting_template_min(ii).full_path_to_data,false);
         numChannels = length(metaData.channelSave);
 
         %save only first frame of each channel
-        data = data(:,:,1:numChannels);
+        maxData = maxData(:,:,1:numChannels);
+        minData = minData(:,:,1:numChannels);
 
         for jj = 1:numChannels % each PMT
-            meanValue(jj,ii) = mean(data(:,:,jj),'all'); % (pixelValue,pmt,file)
-            % need to put Nan if PMTs are missing. Currently lists 0
+            meanValue(jj,ii) = mean(maxData(:,:,jj),'all') - mean(minData(:,:,jj),'all'); % (pixelValue,pmt,file)     
         end
 
     end
