@@ -64,15 +64,26 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     plotting_template = plotting_template(startIndex:end);
 end
 
+chanSave = cell(1,length(plotting_template)); % Saved channels of each file
+allChan = []; % Union of the saved channels over all files
+
 for ii = 1:length(plotting_template)
     if contains(plotting_template(ii).full_path_to_data, '.tif')
-        noiseData(:,:,:,ii) = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
+        [noiseData(:,:,:,ii),metaData] = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
+        chanSave{ii} = metaData.channelSave;
+        allChan = union(allChan,chanSave{ii});
     end
 end
 
 noiseData = single(noiseData);
-maxVal = zeros(size(noiseData,3),size(noiseData,4));
-im_2SD = zeros(size(noiseData,3),size(noiseData,4));
+
+% Results are indexed by hardware channel number rather than by position within the
+% saved channels. scanImage_stackLoad returns the third dimension in channelSave
+% order, so a system saving channels 2 and 4 would otherwise report them as 1 and 2.
+% Channels that were never saved stay NaN.
+channelName = metaData.channelName;
+maxVal = nan(numel(channelName),size(noiseData,4));
+im_2SD = nan(numel(channelName),size(noiseData,4));
 
 for q = 1:size(noiseData,4) % each date
 
@@ -80,13 +91,14 @@ for q = 1:size(noiseData,4) % each date
         fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
     end
 
-    for t = 1:size(noiseData,3) % each PMT
+    for t = 1:length(chanSave{q}) % each PMT
 
         % Extract data
+        tChan = chanSave{q}(t);
         t_im = noiseData(:,:,t,q);
 
-        maxVal(t,q) = max(t_im(:));
-        im_2SD(t,q) = std(t_im(:))*2;
+        maxVal(tChan,q) = max(t_im(:));
+        im_2SD(tChan,q) = std(t_im(:))*2;
 
         % Optionally plot
         if debugPlots
@@ -109,8 +121,9 @@ fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
 xlabels = {plotting_template.date};
 
 hold on
-for ii = 1:size(noiseData,3)
-    plot(im_2SD(ii,:),  'DisplayName', sprintf('PMT %d', ii))
+for ii = 1:length(allChan)
+    tChan = allChan(ii);
+    plot(im_2SD(tChan,:),  'DisplayName', channelName{tChan})
 end
 
 hold off
@@ -128,6 +141,8 @@ if nargout>0
     out.twoSD = im_2SD;
     out.maxValues = maxVal;
     out.date ={plotting_template(:).date};
+    out.channelSave = allChan; % Rows of twoSD/maxValues are indexed by hardware channel
+    out.channelName = channelName;
     varargout{1} = out;
 end
 

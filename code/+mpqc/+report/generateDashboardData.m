@@ -29,9 +29,12 @@ en = mpqc.longitudinal.electrical_noise(data_dir);
 if isempty(en)
     disp('No electrical noise data')
 else
-    m = size(en.twoSD, 1);
-    varNames = ['date', cellstr("PMT" + (1:m))];
-    twoSD = en.twoSD';
+    % Rows of twoSD are indexed by hardware channel, so unsaved channels are NaN.
+    % Report only the channels this system actually acquires, named by their hardware
+    % channel number rather than by their position in the array.
+    chan = en.channelSave;
+    varNames = ['date', cellstr("PMT" + chan(:)')];
+    twoSD = en.twoSD(chan,:)';
     dates = datetime(string([en.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
@@ -72,14 +75,15 @@ stdLight = mpqc.longitudinal.standard_light_source(data_dir);
 if isempty(stdLight)
     disp('No standard light source data')
 else
-    m = size(stdLight.meanValue, 1);
-    varNames = ['date', cellstr("ch" + (1:m))];
+    % As for electrical noise, meanValue rows are indexed by hardware channel
+    chan = stdLight.channelSave;
+    varNames = ['date', cellstr("ch" + chan(:)')];
     dates = datetime(string([stdLight.maxDate{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     stdLightData = cell(n, 1);
     for ii = 1:n
-        stdLightData{ii} = [{datesISO{ii}}, num2cell(stdLight.meanValue(:, ii)')];
+        stdLightData{ii} = [{datesISO{ii}}, num2cell(stdLight.meanValue(chan, ii)')];
     end
     dashboardData.metrics.standardLight.label = 'Standard Light Source';
     dashboardData.metrics.standardLight.units = 'mean pixel value';

@@ -73,20 +73,33 @@ plotting_template_max = plotting_template([plotting_template.gainsUsed] == maxGa
 minGain = min([plotting_template.gainsUsed]);
 plotting_template_min = plotting_template([plotting_template.gainsUsed] == minGain);
 
-meanValue = nan(4,length(plotting_template_max));
+% Rows of meanValue are indexed by hardware channel number rather than by position
+% within the saved channels. scanImage_stackLoad returns the third dimension in
+% channelSave order, so a system saving channels 2 and 4 would otherwise report them
+% as 1 and 2. Channels that were never saved stay NaN. The array cannot be sized until
+% the first file has been read, since the channel count comes from its metadata.
+meanValue = [];
+allChan = []; % Union of the saved channels over all files
 
 for ii = 1:length(plotting_template_max) % each date
     if contains(plotting_template_max(ii).full_path_to_data, '.tif')
         [maxData,metaData]  = mpqc.tools.scanImage_stackLoad(plotting_template_max(ii).full_path_to_data,false);
         [minData,minMetaData] = mpqc.tools.scanImage_stackLoad(plotting_template_min(ii).full_path_to_data,false);
-        numChannels = length(metaData.channelSave);
+        chanSave = metaData.channelSave;
+        numChannels = length(chanSave);
+        allChan = union(allChan,chanSave);
+
+        if isempty(meanValue)
+            channelName = metaData.channelName;
+            meanValue = nan(numel(channelName),length(plotting_template_max));
+        end
 
         %save only first frame of each channel
         maxData = maxData(:,:,1:numChannels);
         minData = minData(:,:,1:numChannels);
 
         for jj = 1:numChannels % each PMT
-            meanValue(jj,ii) = mean(maxData(:,:,jj),'all') - mean(minData(:,:,jj),'all'); % (pixelValue,pmt,file)     
+            meanValue(chanSave(jj),ii) = mean(maxData(:,:,jj),'all') - mean(minData(:,:,jj),'all'); % (pixelValue,pmt,file)
         end
 
     end
@@ -96,19 +109,21 @@ end
 
 fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
 
-plot(meanValue')
+plot(meanValue(allChan,:)')
 xlabels = {plotting_template_max.date};
 title('Mean pixel value at max gain')
 ylabel('Mean pixel value')
 xticks(1:length(xlabels))
 xticklabels(xlabels)
-legend(metaData.channelName(metaData.channelSave),'Location','NorthWest')
+legend(channelName(allChan),'Location','NorthWest')
 
 if nargout>0
     out.fileName = {plotting_template(:).name};
     out.meanValue = meanValue;
     out.date ={plotting_template(:).date};
     out.maxDate = {plotting_template_max(:).date};
+    out.channelSave = allChan; % Rows of meanValue are indexed by hardware channel
+    out.channelName = channelName;
     varargout{1} = out;
 end
 
