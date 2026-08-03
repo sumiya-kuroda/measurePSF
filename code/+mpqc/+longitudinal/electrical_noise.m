@@ -64,28 +64,36 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     plotting_template = plotting_template(startIndex:end);
 end
 
+% Each file is reduced to two scalars per channel: the maximum pixel value and twice
+% the standard deviation. The image stacks themselves are not needed beyond that, so a
+% file is processed then discarded rather than all of them being held in memory.
 chanSave = cell(1,length(plotting_template)); % Saved channels of each file
 allChan = []; % Union of the saved channels over all files
+maxVal = [];
+im_2SD = [];
 
-for ii = 1:length(plotting_template)
-    if contains(plotting_template(ii).full_path_to_data, '.tif')
-        [noiseData(:,:,:,ii),metaData] = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
-        chanSave{ii} = metaData.channelSave;
-        allChan = union(allChan,chanSave{ii});
+for q = 1:length(plotting_template) % each date
+
+    if ~contains(plotting_template(q).full_path_to_data, '.tif')
+        continue
     end
-end
 
-noiseData = single(noiseData);
+    [noiseData,metaData] = mpqc.tools.scanImage_stackLoad(plotting_template(q).full_path_to_data);
+    noiseData = single(noiseData);
+    chanSave{q} = metaData.channelSave;
+    allChan = union(allChan,chanSave{q});
 
-% Results are indexed by hardware channel number rather than by position within the
-% saved channels. scanImage_stackLoad returns the third dimension in channelSave
-% order, so a system saving channels 2 and 4 would otherwise report them as 1 and 2.
-% Channels that were never saved stay NaN.
-channelName = metaData.channelName;
-maxVal = nan(numel(channelName),size(noiseData,4));
-im_2SD = nan(numel(channelName),size(noiseData,4));
-
-for q = 1:size(noiseData,4) % each date
+    if isempty(maxVal)
+        % Results are indexed by hardware channel number rather than by position within
+        % the saved channels. scanImage_stackLoad returns the third dimension in
+        % channelSave order, so a system saving channels 2 and 4 would otherwise report
+        % them as 1 and 2. Channels that were never saved stay NaN. The arrays cannot be
+        % sized until the first file has been read, since the channel count comes from
+        % its metadata.
+        channelName = metaData.channelName;
+        maxVal = nan(numel(channelName),length(plotting_template));
+        im_2SD = nan(numel(channelName),length(plotting_template));
+    end
 
     if debugPlots
         fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
@@ -95,7 +103,7 @@ for q = 1:size(noiseData,4) % each date
 
         % Extract data
         tChan = chanSave{q}(t);
-        t_im = noiseData(:,:,t,q);
+        t_im = noiseData(:,:,t);
 
         maxVal(tChan,q) = max(t_im(:));
         im_2SD(tChan,q) = std(t_im(:))*2;
@@ -117,7 +125,7 @@ for q = 1:size(noiseData,4) % each date
     end
 end
 
-fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
+fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
 xlabels = string([plotting_template.date]);
 
 hold on
@@ -137,7 +145,6 @@ legend
 % Output of the main function
 if nargout>0
     out.fileName = {plotting_template(:).name};
-    out.noiseData = noiseData;
     out.twoSD = im_2SD;
     out.maxValues = maxVal;
     out.date ={plotting_template(:).date};
