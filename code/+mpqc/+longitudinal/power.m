@@ -60,7 +60,7 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     startDate = inputOptions.startDate;
     startIndex = 1;
 
-    while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
+    while startIndex <= numel(plotting_template) && [plotting_template(startIndex).date] < startDate
         startIndex = startIndex + 1;
     end
 
@@ -68,8 +68,8 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
 end
 
 powerData = struct('powerMeasurements', cell(length(plotting_template), 1));
-maxPower = zeros(length(plotting_template));
-percentAt100mW = zeros(length(plotting_template));
+maxPower = zeros(1,length(plotting_template));
+percentAt100mW = zeros(1,length(plotting_template));
 
 % If only one wavelength is measured
 if isequal(plotting_template(:).wavelength)
@@ -165,7 +165,7 @@ elseif ~isempty(inputOptions.wavelength)
 
 % If multiple wavelengths have been recorded
 else
-    allWave = zeros(length(plotting_template));
+    allWave = zeros(1,length(plotting_template));
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
 
     for i = 1:length(plotting_template)

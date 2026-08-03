@@ -55,7 +55,7 @@ plotting_template = plotting_template(order);
 if ~isempty(inputOptions.startDate)
     startDate = inputOptions.startDate;
     startIndex = 1;
-    while [plotting_template(startIndex).date] < startDate  && startIndex <= numel(plotting_template)
+    while startIndex <= numel(plotting_template) && [plotting_template(startIndex).date] < startDate
         startIndex = startIndex + 1;
     end
     plotting_template = plotting_template(startIndex:end);

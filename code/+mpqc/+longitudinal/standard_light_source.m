@@ -60,7 +60,7 @@ if ~isempty(inputOptions.startDate) % Optional variable for selecting starting d
     startDate = inputOptions.startDate;
     startIndex = 1;
 
-    while [plotting_template(startIndex).date] < startDate && startIndex <= numel(plotting_template)
+    while startIndex <= numel(plotting_template) && [plotting_template(startIndex).date] < startDate
         startIndex = startIndex + 1;
     end
 
