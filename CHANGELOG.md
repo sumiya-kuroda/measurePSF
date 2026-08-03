@@ -3,7 +3,7 @@
 
 
 ### 2026/07/27
- * First write of the YAML file has the curly backet format throughout, including for empty fields. 
+ * First write of the YAML file has the curly bracket format throughout, including for empty fields. 
    This makes hand editing easier. 
 
 ### 2026/07/23
