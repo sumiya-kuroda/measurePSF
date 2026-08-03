@@ -64,9 +64,9 @@ end
 % If only one wavelength is measured and the power is within 20mW
 if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) - min([plotting_template.power]) <= 20
 
-powerRange = cell(1,1);
-legendLabels = cell(1,1);
-photonsPerPixel = zeros(1,length(plotting_template));
+    powerRange = cell(1,1);
+    legendLabels = cell(1,1);
+    photonsPerPixel = zeros(1,length(plotting_template));
 
     for ii = 1:length(plotting_template)
         if contains(plotting_template(ii).full_path_to_data, '.tif')
@@ -74,9 +74,9 @@ photonsPerPixel = zeros(1,length(plotting_template));
             % calculate photons per pixel
             data = mpqc.analyse.get_quantalsize_from_file(plotting_template(ii).full_path_to_data,[],skipStandardSource);
             photonsPerPixel(ii) = data.mean_photons_per_pixel;
-            powerRange= [min([plotting_template.power]), max([plotting_template.power])];
-             legendLabels = sprintf('Power between  %g-%g mW', ...
-            min([plotting_template.power]), max([plotting_template.power]));
+            powerRange = [min([plotting_template.power]), max([plotting_template.power])];
+            legendLabels = sprintf('Power between  %g-%g mW', ...
+                min([plotting_template.power]), max([plotting_template.power]));
         end
     end
 
