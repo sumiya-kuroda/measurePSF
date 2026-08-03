@@ -38,7 +38,7 @@ for ii=1:length(maintenanceFiles)
         plotting_template(n).full_path_to_data = fullfile(tmp.folder,tmp.name);
         plotting_template(n).type = 'standard_light_source';
         plotting_template(n).plotting_func = @mpqc.plot.standard_light_source;
-        plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
+        plotting_template(n).date = datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss');
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
         gains = regexp(plotting_template(n).name,'(\d+)[vV]', 'tokens');
         plotting_template(n).gainsUsed = str2double(gains{1}{1});
@@ -53,7 +53,7 @@ end
 
 % sort plotting_template data by the date/time
 date_list = [plotting_template.date];
-[~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
+[~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
 if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
@@ -110,7 +110,7 @@ end
 fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
 
 plot(meanValue(allChan,:)')
-xlabels = {plotting_template_max.date};
+xlabels = string([plotting_template_max.date]);
 title('Mean pixel value at max gain')
 ylabel('Mean pixel value')
 xticks(1:length(xlabels))

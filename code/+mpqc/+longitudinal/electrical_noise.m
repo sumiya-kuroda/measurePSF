@@ -37,7 +37,7 @@ for ii=1:length(maintenanceFiles)
         plotting_template(n).full_path_to_data = fullfile(tmp.folder,tmp.name);
         plotting_template(n).type = 'electrical_noise';
         plotting_template(n).plotting_func = @mpqc.plot.electrical_noise;
-        plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
+        plotting_template(n).date = datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss');
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
         n=n+1;
     end
@@ -50,7 +50,7 @@ end
 
 % sort plotting_template data by the date/time
 date_list = [plotting_template.date];
-[~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
+[~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
 if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
@@ -110,7 +110,7 @@ for q = 1:size(noiseData,4) % each date
             hold on
             b = plot(m);
             b.LineWidth = 2;
-            sgtitle(plotting_template(q).date)
+            sgtitle(string(plotting_template(q).date))
             title(['PMT # ',num2str(t)])
             hold off
         end
@@ -118,7 +118,7 @@ for q = 1:size(noiseData,4) % each date
 end
 
 fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
-xlabels = {plotting_template.date};
+xlabels = string([plotting_template.date]);
 
 hold on
 for ii = 1:length(allChan)

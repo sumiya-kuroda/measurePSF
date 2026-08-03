@@ -82,7 +82,7 @@ if isequal(plotting_template(:).wavelength) &&  max([plotting_template.power]) -
 
     fig = mpqc.tools.returnFigureHandleForFile(['long_',mfilename]);
     plot(photonsPerPixel)
-    xlabels = string({plotting_template.date});
+    xlabels = string([plotting_template.date]);
     xticks(1:length(xlabels))
     xticklabels(xlabels)
     title('Photons per Pixel')
@@ -142,7 +142,7 @@ else
     end
 
     hold off
-    xlabels = string({plotting_template.date});
+    xlabels = string([plotting_template.date]);
     xticks(1:length(xlabels))
     xticklabels(xlabels)
     legend(legendLabels,'Location','northeast')

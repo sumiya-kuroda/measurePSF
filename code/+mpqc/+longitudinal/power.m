@@ -39,7 +39,7 @@ for ii=1:length(maintenanceFiles)
         plotting_template(n).full_path_to_data = fullfile(tmp.folder,tmp.name);
         plotting_template(n).type = 'power';
         plotting_template(n).plotting_func = @mpqc.plot.power;
-        plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
+        plotting_template(n).date = datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss');
         plotting_template(n).wavelength = str2num(cell2mat(regexp(tmp.name,'\d*(?=nm)','match')));
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
         n=n+1;
@@ -53,7 +53,7 @@ end
 
 % sort plotting_template data by the date/time
 date_list = [plotting_template.date];
-[~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
+[~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
 if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
@@ -86,7 +86,7 @@ if isequal(plotting_template(:).wavelength)
             hold on
             subplot(3,1,1)
             plot(linspace(0,100,length(powerData(ii).powerMeasurements.observedPower_mW)),mean(powerData(ii).powerMeasurements.observedPower_mW,2),'.')
-            legend(plotting_template.date,'location', 'Northwest')
+            legend(string([plotting_template.date]),'location', 'Northwest')
             title(cell2mat(['Power at ', string(plotting_template(1).wavelength), 'nm']))
             xlabel('Percent power')
             ylabel('Power (mW)')
@@ -97,7 +97,7 @@ if isequal(plotting_template(:).wavelength)
     subplot(3,1,2)
     plot(maxPower, '-*')
     title('Maximum laser power')
-    xlabels = {plotting_template.date};
+    xlabels = string([plotting_template.date]);
     xticks(1:length(xlabels))
     xticklabels(xlabels)
     ylabel('Maximum power (mW)')
@@ -105,7 +105,7 @@ if isequal(plotting_template(:).wavelength)
     subplot(3,1,3)
     plot(percentAt100mW)
     title('Percent power at 100mW')
-    xlabels = {plotting_template.date};
+    xlabels = string([plotting_template.date]);
     xticks(1:length(xlabels))
     xticklabels(xlabels)
     ylabel('Percent power')
@@ -131,7 +131,7 @@ elseif ~isempty(inputOptions.wavelength)
             hold on
             subplot(3,1,1)
             plot(linspace(0,100,length(powerData(a).powerMeasurements.observedPower_mW)),mean(powerData(a).powerMeasurements.observedPower_mW,2),'.')
-            legend(waveDate(:),'location', 'Northwest')
+            legend(string(waveDate(:)),'location', 'Northwest')
             title(cell2mat(['Power at ', string(wavelength), 'nm']))
             xlabel('Percent power')
             ylabel('Power (mW)')
@@ -149,7 +149,7 @@ elseif ~isempty(inputOptions.wavelength)
         subplot(3,1,2)
         plot(maxPower, '-*')
         title('Maximum laser power')
-        xlabels = waveDate(:);
+        xlabels = string(waveDate(:));
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Maximum power (mW)')
@@ -157,7 +157,7 @@ elseif ~isempty(inputOptions.wavelength)
         subplot(3,1,3)
         plot(percentAt100mW)
         title('Percent power at 100mW')
-        xlabels = {plotting_template.date};
+        xlabels = string([plotting_template.date]);
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Percent power')
@@ -193,7 +193,7 @@ else
                 hold on
                 subplot(3,1,1)
                 plot(linspace(0,100,length(powerData(a,jj).powerMeasurements.observedPower_mW)),mean(powerData(a,jj).powerMeasurements.observedPower_mW,2),'.')
-                legend(waveDate(:,jj),'location', 'Northwest')
+                legend(string(waveDate(:,jj)),'location', 'Northwest')
                 title(cell2mat(['Power at ', string(wavelengthVals(jj)), 'nm']))
                 xlabel('Percent power')
                 ylabel('Power (mW)')
@@ -203,7 +203,7 @@ else
         subplot(3,1,2)
         plot(maxPower(:,jj), '-*')
         title('Maximum laser power')
-        xlabels = waveDate(:,jj);
+        xlabels = string(waveDate(:,jj));
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Maximum power (mW)')
@@ -211,7 +211,7 @@ else
         subplot(3,1,3)
         plot(percentAt100mW(:,jj))
         title('Percent power at 100mW')
-        xlabels = {plotting_template.date};
+        xlabels = string([plotting_template.date]);
         xticks(1:length(xlabels))
         xticklabels(xlabels)
         ylabel('Percent power')

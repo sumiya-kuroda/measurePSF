@@ -35,7 +35,9 @@ else
     chan = en.channelSave;
     varNames = ['date', cellstr("PMT" + chan(:)')];
     twoSD = en.twoSD(chan,:)';
-    dates = datetime(string([en.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    % The longitudinal functions return dates as datetime, so no parsing is needed.
+    % Going via the default display format would tie this to the machine's locale.
+    dates = [en.date{:}]';
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     data = cell(n, 1);
@@ -56,7 +58,7 @@ if isempty(pow)
 else
    % TO DO add in wavelength
     varNames = {'date','maxPower_mW','percentAt100mW'};
-    dates = datetime(string([pow.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    dates = [pow.date{:}]';
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     power = cell(n, 1);
@@ -78,7 +80,7 @@ else
     % As for electrical noise, meanValue rows are indexed by hardware channel
     chan = stdLight.channelSave;
     varNames = ['date', cellstr("ch" + chan(:)')];
-    dates = datetime(string([stdLight.maxDate{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    dates = [stdLight.maxDate{:}]';
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     stdLightData = cell(n, 1);
@@ -109,7 +111,7 @@ else
 
     % The dashboard needs series names as strings, not as [min,max] numeric pairs
     varNames = ['date', cellfun(@powerRangeName, powerRanges, 'UniformOutput', false)];
-    dates = datetime(string([photons.date{:}]'), 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
+    dates = [photons.date{:}]';
     datesISO = cellstr(string(dates, "yyyy-MM-dd'T'HH:mm:ss"));
     n = numel(datesISO);
     photonsPerPixel = cell(n, 1);
