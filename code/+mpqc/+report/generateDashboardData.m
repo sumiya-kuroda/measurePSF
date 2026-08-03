@@ -90,7 +90,7 @@ end
 
 % Lens paper photons per pixel
 disp('Searching for photon counting data')
-photons = mpqc.longitudinal.lens_paper(data_dir,true);
+photons = mpqc.longitudinal.lens_paper(data_dir,'skipStandardSource',true);
 if isempty(photons)
     disp('No photon counting data')
 else
