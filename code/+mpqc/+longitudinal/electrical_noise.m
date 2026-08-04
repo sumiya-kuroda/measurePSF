@@ -2,21 +2,19 @@ function varargout = electrical_noise(data_dir,varargin)
 % Longitudinal electrical noise plots showing FWHM and max values over time
 %
 % mpqc.longitudinal.electrical_noise(maintenace_folder_path, varargin)
-% Optional inputs: Starting date- year-month-day
-% mpqc.longitudinal.electrical_noise(maintenace_folder_path, '2024-06-01')
+%
+% Optional inputs: 'startDate', 'year-month-day'
+% mpqc.longitudinal.electrical_noise(maintenace_folder_path, 'startDate', '2024-06-20')
+% Plots all data from given day forward
 %
 % Purpose
-% Plots of the maximum value and FWHM of electrical noise for each channel
-% with PMTs off. If there is significant change in electrical noise, the FWHM
-% distributions will likely increase in value.
+% Plots of the pixel value at two standard deviations of electrical noise for each channel
+% with PMTs off. If there is significant change in electrical noise, the
+% pixel value will increase.
 %
 %
 % Outputs
 % out (optional) - structure containing key information and data.
-%
-% Notes
-% Currently plots for 4 PMT channels regardless of actual number of
-% PMTs in system
 %
 %
 % Isabell Whiteley, SWC AMF 2025
@@ -25,20 +23,21 @@ if nargin<1
     data_dir = pwd;
 end
 
+inputOptions = parseLongitudinalInputVariable(varargin{:});
 
 debugPlots = false;
 
-maintenanceFiles = dir(fullfile(data_dir,'\**\*.tif')); 
+maintenanceFiles = dir(fullfile(data_dir,'**','*.tif'));
 n=1;
 
 for ii=1:length(maintenanceFiles)
     tmp = maintenanceFiles(ii);
 
     if contains(tmp.name,'electrical_noise')
-        plotting_template(n) = generic_generator_template(tmp);
+        plotting_template(n).full_path_to_data = fullfile(tmp.folder,tmp.name);
         plotting_template(n).type = 'electrical_noise';
         plotting_template(n).plotting_func = @mpqc.plot.electrical_noise;
-        plotting_template(n).date = string(datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss'));
+        plotting_template(n).date = datetime(regexp(tmp.name, '(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})','match'),'InputFormat','yyyy-MM-dd_HH-mm-ss');
         [pathstr,plotting_template(n).name,ext] = fileparts(tmp.name);
         n=n+1;
     end
@@ -51,48 +50,63 @@ end
 
 % sort plotting_template data by the date/time
 date_list = [plotting_template.date];
-[~,order] = sort(datenum(date_list,'dd-mm-yyyy hh:MM:ss'),1,'ascend');
+[~,order] = sort(date_list,'ascend');
 plotting_template = plotting_template(order);
 
-if nargin > 1 % Optional variable for selecting starting date
-    startDate = datetime(varargin{1});
+if ~isempty(inputOptions.startDate) % Optional variable for selecting starting date
+    startDate = inputOptions.startDate;
     startIndex = 1;
 
-    while [plotting_template(startIndex).date] < startDate
+    while startIndex <= numel(plotting_template) && [plotting_template(startIndex).date] < startDate
         startIndex = startIndex + 1;
     end
 
     plotting_template = plotting_template(startIndex:end);
 end
 
-for ii = 1:length(plotting_template)
-    if contains(plotting_template(ii).full_path_to_data, '.tif')
-        noiseData(:,:,:,ii) = mpqc.tools.scanImage_stackLoad(plotting_template(ii).full_path_to_data);
+% Each file is reduced to two scalars per channel: the maximum pixel value and twice
+% the standard deviation. The image stacks themselves are not needed beyond that, so a
+% file is processed then discarded rather than all of them being held in memory.
+chanSave = cell(1,length(plotting_template)); % Saved channels of each file
+allChan = []; % Union of the saved channels over all files
+maxVal = [];
+im_2SD = [];
+
+for q = 1:length(plotting_template) % each date
+
+    if ~contains(plotting_template(q).full_path_to_data, '.tif')
+        continue
     end
-end
 
-noiseData = single(noiseData);
+    [noiseData,metaData] = mpqc.tools.scanImage_stackLoad(plotting_template(q).full_path_to_data);
+    noiseData = single(noiseData);
+    chanSave{q} = metaData.channelSave;
+    allChan = union(allChan,chanSave{q});
 
-for q = 1:size(noiseData,4) % each date
+    if isempty(maxVal)
+        % Results are indexed by hardware channel number rather than by position within
+        % the saved channels. scanImage_stackLoad returns the third dimension in
+        % channelSave order, so a system saving channels 2 and 4 would otherwise report
+        % them as 1 and 2. Channels that were never saved stay NaN. The arrays cannot be
+        % sized until the first file has been read, since the channel count comes from
+        % its metadata.
+        channelName = metaData.channelName;
+        maxVal = nan(numel(channelName),length(plotting_template));
+        im_2SD = nan(numel(channelName),length(plotting_template));
+    end
 
     if debugPlots
         fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
     end
-    for t = 1:size(noiseData,3) % each PMT
+
+    for t = 1:length(chanSave{q}) % each PMT
 
         % Extract data
-        t_im = noiseData(:,:,t,q);
-        [n,x] = hist(t_im(:),100); % plots all data as histogram
-        m = smoothdata(n,'gaussian',5);
-        detail = interp1(x,m,[1:1000]);
+        tChan = chanSave{q}(t);
+        t_im = noiseData(:,:,t);
 
-        maxVal(t,q) = max(detail(:));
-        halfMaxVal = maxVal(t,q)/2;
-        leftIndex = find(detail(:) >= halfMaxVal, 1, 'first');
-        rightIndex = find(detail(:) >= halfMaxVal, 1, 'last');
-        fwhm(t,q) = rightIndex -leftIndex;
-
-        % TODO Remove data where PMT does not exist
+        maxVal(tChan,q) = max(t_im(:));
+        im_2SD(tChan,q) = std(t_im(:))*2;
 
         % Optionally plot
         if debugPlots
@@ -104,49 +118,39 @@ for q = 1:size(noiseData,4) % each date
             hold on
             b = plot(m);
             b.LineWidth = 2;
-            sgtitle(plotting_template(q).date)
+            sgtitle(string(plotting_template(q).date))
             title(['PMT # ',num2str(t)])
             hold off
         end
     end
 end
 
-for ii = 1:size(noiseData,3) % plotting FWHM and max value over time for each PMT
-    xlabels = {plotting_template.date};
-    fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,ii));
-    subplot(2,1,1)
-    plot(maxVal(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('Max value')
+fig = mpqc.tools.returnFigureHandleForFile(sprintf('%s_%02d',mfilename,q));
+xlabels = string([plotting_template.date]);
 
-    subplot(2,1,2)
-    plot(fwhm(ii,:))
-    xticks(1:length(xlabels))
-    xticklabels(xlabels)
-    title('FWHM')
-    sgtitle(['PMT # ',num2str(ii)])
+hold on
+for ii = 1:length(allChan)
+    tChan = allChan(ii);
+    plot(im_2SD(tChan,:),  'DisplayName', channelName{tChan})
 end
+
+hold off
+xticks(1:length(xlabels))
+xticklabels(xlabels)
+title('Two SD')
+ylabel('Pixel value')
+legend
 
 
 % Output of the main function
 if nargout>0
     out.fileName = {plotting_template(:).name};
-    out.noiseData = noiseData;
-    out.fwhm = fwhm;
+    out.twoSD = im_2SD;
     out.maxValues = maxVal;
     out.date ={plotting_template(:).date};
+    out.channelSave = allChan; % Rows of twoSD/maxValues are indexed by hardware channel
+    out.channelName = channelName;
     varargout{1} = out;
 end
 
 end % close main funtion
-
-
-
-function out = generic_generator_template(t_dir)
-out.full_path_to_data = fullfile(t_dir.folder,t_dir.name);
-out.type = [];
-out.plotting_func = [];
-out.name = [];
-out.date = [];
-end

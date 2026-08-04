@@ -2,7 +2,7 @@ function [imStack,metadata] = scanImage_stackLoad(fileName,subtractOffset)
 % load a z-stack from ScanImage for analysis return also in a structure useful metadata
 %
 %
-% function imStack = mpqc.tools.scanImage_stackLoad(fileName,subtractOffset)
+% function [imStack,metadata] = mpqc.tools.scanImage_stackLoad(fileName,subtractOffset)
 %
 % Purpose
 % Return z stack and metadata. By default subtracts any offset if needed.

@@ -323,7 +323,6 @@ classdef ThorlabsPowerMeter < matlab.mixin.Copyable
             [~,wavelength_MAX]=obj.deviceNET.getWavelength(2);
             if (wavelength_MIN<=wavelength && wavelength<=wavelength_MAX)
                 obj.deviceNET.setWavelength(wavelength);
-                fprintf('\tSet wavelength to %.4f\r',wavelength);
             else
                 if wavelength_MIN>wavelength
                     warning('Exceed minimum wavelength! Force to the minimum.');

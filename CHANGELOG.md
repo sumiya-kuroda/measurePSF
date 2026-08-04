@@ -2,6 +2,26 @@
 # MPQC Change-Log
 
 
+### 2026/07/27
+ * First write of the YAML file has the curly bracket format throughout, including for empty fields. 
+   This makes hand editing easier. 
+
+### 2026/07/23
+ * BUGFIX: Grid image was incorrectly rotated. 
+ * DEV: `mpqc.interfaces.UniformSlideLive` creates a live preview version of the 
+    uniform slide. This maybe will need to be moved to a better location. But it works
+    for now, and it does help with alignment. 
+
+
+### 2026/07/22
+ * Disable blanking during uniform slid recording. These bright slides can induce enormous amp ringing that 
+  create artifacts that look problematic at brighter signal levels, but are electrical rather than optical.
+
+### 2026/07/22
+ * Disable blanking during uniform slid recording. These bright slides can induce enormous amp ringing that 
+  create artifacts that look problematic at brighter signal levels, but are electrical rather than optical.
+
+
 ### 2026/06/23
  * Prompts to edit default fields in YAML. More graceful failure if YAML is broken.
  * Bugfix so microscope name returned without funny characters.

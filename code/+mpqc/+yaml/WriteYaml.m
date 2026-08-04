@@ -81,11 +81,11 @@ if isempty(r)
 end
 function result = scan_char(r)
 import mpqc.yaml.*;
-if isempty(r)
-        result = java.util.ArrayList();
-    else
-        result = java.lang.String(r);
-    end
+    % Note: an empty char array is emitted as an empty scalar string ('') rather
+    % than an empty list ([]). This keeps struct fields scalar so that sections with
+    % unpopulated values (e.g. spare PMTs/lasers) are still written in flow style
+    % ({model: '', ...}) instead of dropping to block style, which is easier to hand-edit.
+    result = java.lang.String(r);
 end
 function result = scan_datetime(r)
 import mpqc.yaml.*;

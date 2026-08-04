@@ -104,7 +104,7 @@ function standard_light_source(channelSave,nFrames,gainsToTest,darkResponse)
     SETTINGS=mpqc.settings.readSettings;
 
     if ~isempty(SETTINGS.QC.sourceIDs) && ~darkResponse
-        if length(SETTINGS.QC.sourceIDs)==1
+        if isscalar(SETTINGS.QC.sourceIDs)
             sourceID = SETTINGS.QC.sourceIDs{1};
         elseif length(SETTINGS.QC.sourceIDs)>1
             fprintf('Select source ID:\n')

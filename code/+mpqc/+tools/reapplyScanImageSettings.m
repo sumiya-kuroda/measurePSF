@@ -41,6 +41,10 @@ function settings = reapplyScanImageSettings(API,settings,verbose)
         API.hSI.hStackManager.slowStackWithFastZ = settings.stackManSlowFastZ;
     end
 
+
+    API.hSI.hBeams.turnAroundBlanking = settings.turnAroundBlanking;
+    API.hSI.hBeams.flybackBlanking = settings.flybackBlanking;
+
     API.hSI.hRoiManager.scanZoomFactor = settings.zoomFactor;
     API.hSI.hRoiManager.pixelsPerLine = settings.pixelsPerLine;
 
