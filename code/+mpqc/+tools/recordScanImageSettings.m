@@ -32,7 +32,9 @@ function settings = recordScanImageSettings(API)
     end
 
 
-    settings.turnAroundBlanking = API.hSI.hBeams.turnAroundBlanking;
+    if API.versionGreaterThan('2023.0')
+        settings.turnAroundBlanking = API.hSI.hBeams.turnAroundBlanking;
+    end
     settings.flybackBlanking = API.hSI.hBeams.flybackBlanking;
 
     settings.zoomFactor = API.hSI.hRoiManager.scanZoomFactor;
