@@ -20,8 +20,9 @@ function varargout = lens_paper(fname,aveBy)
 
 
     % bring up a file picker UI if the user did not input a file
-    [t_file, t_path] = uigetfile('*.tif', 'Select a file');
+
     if nargin<1 || isempty(fname)
+        [t_file, t_path] = uigetfile('*.tif', 'Select a file');
         if isequal(t_file, 0)
             return
         else
